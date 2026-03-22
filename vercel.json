@@ -1,5 +1,6 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/AI_WORKS_v2_easy_1.html" }
+    { "source": "/", "destination": "/AI_WORKS_v2_easy_1.html" },
+    { "source": "/kensetsu", "destination": "/kensetsuai_demo_v2.html" }
   ]
 }
