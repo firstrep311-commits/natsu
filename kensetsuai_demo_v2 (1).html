@@ -226,6 +226,90 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);}
 .a-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:5px;}
 .a-task{font-size:12px;color:rgba(241,245,249,.88);line-height:1.5;}
 .a-meta{font-size:10px;color:var(--green);margin-top:2px;}
+
+/* ========================================
+   MOBILE RESPONSIVE — max-width: 768px
+   ======================================== */
+@media (max-width: 768px) {
+
+  /* NAV */
+  .topnav{flex-direction:column;height:auto;padding:10px 12px 6px;gap:6px;position:sticky;top:0;}
+  .topnav-logo{font-size:18px;}
+  .topnav-badge{display:none;}
+  .topnav-tabs{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;scrollbar-width:none;}
+  .topnav-tabs::-webkit-scrollbar{display:none;}
+  .tab-btn{font-size:11px;padding:5px 10px;white-space:nowrap;}
+
+  /* PANELS */
+  .panel{padding:14px 12px;}
+
+  /* SECTION HEADER */
+  .sec-header{flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:16px;}
+  .sec-header h2{font-size:17px;}
+  .sec-header > div:last-child{margin-left:0 !important;}
+
+  /* GRIDS → single column */
+  .grid2,.grid3,.grid4{grid-template-columns:1fr;}
+
+  /* FORM ROWS → single column */
+  .form-row,.form-row3{grid-template-columns:1fr;}
+
+  /* WORKSPACE */
+  .ws-shell{grid-template-columns:1fr;}
+  .out-panel{position:static;}
+
+  /* STAT BOX */
+  .stat-value{font-size:22px;}
+
+  /* STEPS */
+  .steps{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .step{font-size:11px;padding:7px 4px;min-width:60px;}
+
+  /* CARDS */
+  .card{padding:14px 12px;}
+
+  /* ITEMS TABLE (見積) */
+  .items-hdr{grid-template-columns:2fr .6fr .6fr 1fr 24px;font-size:9px;}
+  .item-row{grid-template-columns:2fr .6fr .6fr 1fr 24px;}
+
+  /* TABLE overflow */
+  .data-table{font-size:12px;}
+  .data-table th,.data-table td{padding:8px 8px;}
+
+  /* BUTTONS */
+  .btn-full{font-size:14px;padding:12px;}
+
+  /* DOC TYPE GRID */
+  .doc-type-grid{grid-template-columns:1fr 1fr;}
+
+  /* CHECK GRID */
+  .check-grid{grid-template-columns:1fr;}
+
+  /* INVOICE header row */
+  #panel-invoice .sec-header > div:last-child{width:100%;}
+  #panel-invoice .sec-header > div:last-child .btn{width:100%;justify-content:center;}
+
+  /* Dashboard header selects/buttons */
+  #panel-dashboard .sec-header > div:last-child{display:flex;flex-wrap:wrap;gap:6px;width:100%;}
+  #panel-dashboard .sec-header > div:last-child select,
+  #panel-dashboard .sec-header > div:last-child .btn{flex:1;}
+
+  /* Invoice search row */
+  #panel-invoice .card > div:first-child{flex-direction:column;gap:8px;}
+  #panel-invoice .card > div:first-child input[type=text]{width:100%;}
+  #panel-invoice .card > div:first-child .btn{width:100%;justify-content:center;}
+
+  /* AI overlay box */
+  .ai-overlay-box{padding:22px 20px;margin:0 16px;}
+}
+
+/* Extra small phones */
+@media (max-width: 480px) {
+  .topnav-logo{font-size:16px;}
+  .stat-value{font-size:20px;}
+  .items-hdr,.item-row{grid-template-columns:1.8fr .5fr .5fr .9fr 22px;font-size:9px;}
+  .step{font-size:10px;}
+}
 </style>
 </head>
 <body>
