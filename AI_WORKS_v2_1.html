@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI WORKS — 現場AIツール</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0A0F1E;--surface:#111827;--surface2:#1A2235;
+  --border:rgba(255,255,255,0.08);--orange:#FF5C00;--orange2:#FF8C42;
+  --gold:#F0B429;--green:#22C55E;--cyan:#06B6D4;--red:#EF4444;
+  --text:#F1F5F9;--text2:#94A3B8;--text3:#475569;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;}
+.shell{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:200px;min-width:200px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.sb-logo{padding:20px 16px 16px;border-bottom:1px solid var(--border);}
+.sb-wordmark{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;letter-spacing:2px;color:var(--orange);}
+.sb-tagline{font-size:10px;color:var(--text3);letter-spacing:2px;margin-top:3px;}
+.sb-nav{padding:12px 8px;flex:1;}
+.sb-label{font-size:9px;color:var(--text3);letter-spacing:3px;text-transform:uppercase;padding:0 8px;margin:14px 0 6px;}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--text2);transition:all .15s;margin-bottom:2px;}
+.sb-item:hover{color:var(--text);background:rgba(255,255,255,.04);}
+.sb-item.active{color:var(--text);background:rgba(255,92,0,.12);outline:1px solid rgba(255,92,0,.2);}
+.sb-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0;}
+.sb-foot{padding:14px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text3);}
+.pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2.5s ease infinite;flex-shrink:0;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.8);}}
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+.topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;}
+.topbar-title{font-family:'Oswald',sans-serif;font-size:16px;letter-spacing:2px;color:var(--text);}
+.topbar-badge{font-size:10px;font-weight:700;letter-spacing:1px;padding:4px 10px;border-radius:20px;background:rgba(255,92,0,.12);color:var(--orange);outline:1px solid rgba(255,92,0,.2);}
+.scroll{flex:1;overflow-y:auto;padding:20px 24px;}
+.scroll::-webkit-scrollbar{width:3px;}
+.scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:2px;}
+.tool-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px;}
+.card-head{font-size:10px;font-weight:700;color:var(--orange);letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+.card-num{width:18px;height:18px;border-radius:50%;background:var(--orange);color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.fg{margin-bottom:12px;}
+.flabel{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.5px;margin-bottom:5px;display:flex;align-items:center;gap:5px;}
+.req{font-size:8px;background:var(--orange);color:#fff;padding:1px 4px;border-radius:3px;font-weight:900;}
+.fi,.fs,.fta{width:100%;background:rgba(10,15,30,.8);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:13px;outline:none;transition:border-color .15s,box-shadow .15s;}
+.fi:focus,.fs:focus,.fta:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,92,0,.1);}
+.fs option{background:var(--surface);}
+.fta{resize:vertical;min-height:80px;line-height:1.8;}
+.frow{display:flex;gap:10px;}
+.frow .fg{flex:1;}
+.btn-gen{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--orange),var(--orange2));color:#fff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:14px;font-weight:900;letter-spacing:1px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(255,92,0,.2);}
+.btn-gen:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 24px rgba(255,92,0,.35);}
+.btn-gen:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-gen:active:not(:disabled){transform:translateY(0);}
+.out-panel{background:rgba(10,15,30,.9);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:sticky;top:0;}
+.out-head{padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.out-title{font-size:10px;font-weight:700;color:var(--green);letter-spacing:2px;text-transform:uppercase;}
+.out-acts{display:flex;gap:6px;}
+.out-btn{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:6px;padding:4px 10px;color:var(--green);font-size:10px;font-weight:700;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;}
+.out-btn:hover{background:rgba(34,197,94,.16);}
+.out-body{padding:20px;min-height:280px;max-height:70vh;overflow-y:auto;}
+.out-body::-webkit-scrollbar{width:3px;}
+.out-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:260px;color:var(--text3);gap:8px;text-align:center;}
+.empty-icon{font-size:40px;opacity:.2;}
+.empty-text{font-size:13px;}
+.loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:260px;gap:14px;}
+.spinner{width:36px;height:36px;border-radius:50%;border:3px solid rgba(255,92,0,.15);border-top-color:var(--orange);animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-size:13px;color:var(--text2);}
+.out-section{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.04);}
+.out-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.out-sec-label{font-size:9px;font-weight:700;color:var(--orange);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px;}
+.out-text{font-size:13px;line-height:1.9;color:rgba(241,245,249,.8);white-space:pre-wrap;}
+.status-bar{padding:9px 18px;background:rgba(10,15,30,.6);border-top:1px solid var(--border);display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);}
+.status-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2.5s ease infinite;}
+.status-dot.active{background:var(--orange);}
+.qt{width:100%;border-collapse:collapse;margin:10px 0;}
+.qt th{background:rgba(240,180,41,.1);color:var(--gold);font-size:10px;padding:7px 9px;text-align:left;letter-spacing:1px;font-weight:700;}
+.qt td{padding:7px 9px;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;color:rgba(241,245,249,.8);}
+.qt .r{text-align:right;}
+.qt-total{background:rgba(240,180,41,.05);border-radius:8px;padding:12px 14px;margin:10px 0;}
+.qt-row{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px;}
+.qt-row.final{font-size:18px;font-weight:900;color:var(--gold);margin-top:8px;border-top:1px solid rgba(255,255,255,.08);padding-top:8px;}
+.items-hdr{display:grid;grid-template-columns:2.5fr .7fr .7fr 1.2fr 32px;gap:6px;padding:6px 8px;background:rgba(255,92,0,.06);border-radius:6px;font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:5px;}
+.item-row{display:grid;grid-template-columns:2.5fr .7fr .7fr 1.2fr 32px;gap:6px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.03);align-items:center;}
+.ii{background:rgba(10,15,30,.8);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:6px 8px;width:100%;font-family:'Zen Kaku Gothic New',sans-serif;font-size:12px;color:var(--text);outline:none;}
+.ii:focus{border-color:var(--orange);}
+.ii-r{text-align:right;}
+.ii-del{background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;transition:color .15s;}
+.ii-del:hover{color:var(--red);}
+.add-item{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;width:100%;padding:8px;background:none;border:1px dashed rgba(255,92,0,.2);border-radius:8px;cursor:pointer;color:var(--text3);font-size:12px;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;}
+.add-item:hover{border-color:var(--orange);color:var(--orange);}
+.subtotal{margin-top:12px;padding:12px;background:rgba(10,15,30,.8);border-radius:8px;}
+.st-row{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px;}
+.st-row.total-row{font-size:16px;font-weight:900;color:var(--text);border-top:1px solid var(--border);padding-top:7px;margin-top:4px;}
+.tag-wrap{display:flex;flex-wrap:wrap;gap:5px;min-height:40px;background:rgba(10,15,30,.8);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 10px;}
+.tag-wrap:focus-within{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,92,0,.1);}
+.tag{background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.25);border-radius:12px;padding:2px 8px;font-size:11px;color:var(--cyan);display:flex;align-items:center;gap:3px;}
+.tag-x{background:none;border:none;color:var(--cyan);cursor:pointer;font-size:11px;opacity:.6;}
+.tag-x:hover{opacity:1;}
+.tag-input{background:none;border:none;outline:none;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:12px;flex:1;min-width:80px;}
+.tag-input::placeholder{color:var(--text3);}
+.photo-drop{border:1px dashed rgba(255,92,0,.2);border-radius:8px;padding:16px;text-align:center;cursor:pointer;transition:all .15s;}
+.photo-drop:hover{border-color:var(--orange);background:rgba(255,92,0,.03);}
+.photo-grid{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;}
+.photo-thumb{position:relative;width:64px;height:64px;}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;border-radius:6px;border:1px solid rgba(255,92,0,.2);}
+.photo-del{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--red);border:none;cursor:pointer;font-size:9px;color:#fff;display:flex;align-items:center;justify-content:center;}
+.mode-tabs{display:flex;gap:0;background:rgba(10,15,30,.8);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:3px;margin-bottom:12px;}
+.mode-tab{flex:1;padding:6px;border-radius:5px;font-size:11px;font-weight:700;letter-spacing:.5px;border:none;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;color:var(--text3);background:none;}
+.mode-tab.active{background:rgba(255,92,0,.15);color:var(--orange);outline:1px solid rgba(255,92,0,.25);}
+.action-list{display:flex;flex-direction:column;gap:6px;}
+.action-item{background:rgba(34,197,94,.04);border:1px solid rgba(34,197,94,.1);border-radius:7px;padding:9px 12px;display:flex;gap:9px;align-items:flex-start;}
+.a-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:5px;}
+.a-body{flex:1;}
+.a-task{font-size:13px;color:rgba(241,245,249,.88);line-height:1.5;}
+.a-meta{font-size:10px;color:var(--green);margin-top:3px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#0A0F1E;padding:8px 20px;border-radius:20px;font-weight:900;font-size:12px;transition:transform .25s ease;z-index:9999;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.home-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.home-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden;}
+.home-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .18s;}
+.home-card.orange::after{background:linear-gradient(90deg,var(--orange),transparent);}
+.home-card.gold::after{background:linear-gradient(90deg,var(--gold),transparent);}
+.home-card.cyan::after{background:linear-gradient(90deg,var(--cyan),transparent);}
+.home-card:hover{border-color:rgba(255,92,0,.3);transform:translateY(-2px);}
+.home-card:hover::after{opacity:1;}
+.hc-icon{font-size:26px;margin-bottom:8px;}
+.hc-name{font-size:14px;font-weight:900;color:var(--text);margin-bottom:4px;}
+.hc-desc{font-size:11px;color:var(--text2);line-height:1.7;}
+.hc-arrow{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--orange);font-size:18px;opacity:.4;}
+.flow-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.flow-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;gap:10px;}
+.flow-n{width:26px;height:26px;border-radius:50%;flex-shrink:0;background:rgba(255,92,0,.12);border:1px solid rgba(255,92,0,.25);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--orange);}
+.flow-text{font-size:12px;color:var(--text2);line-height:1.7;}
+.flow-text strong{display:block;color:var(--text);font-size:13px;margin-bottom:2px;}
+
+/* ── API KEY SETUP SCREEN ── */
+.setup-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+.setup-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;max-width:480px;width:100%;}
+.setup-logo{font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;letter-spacing:3px;color:var(--orange);margin-bottom:4px;}
+.setup-sub{font-size:12px;color:var(--text3);letter-spacing:2px;margin-bottom:32px;}
+.setup-title{font-size:18px;font-weight:900;margin-bottom:6px;}
+.setup-desc{font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:24px;}
+.setup-label{font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.5px;margin-bottom:6px;}
+.setup-input{width:100%;background:rgba(10,15,30,.8);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:11px 14px;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:13px;outline:none;margin-bottom:8px;transition:border-color .15s;}
+.setup-input:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,92,0,.1);}
+.setup-hint{font-size:11px;color:var(--text3);margin-bottom:24px;line-height:1.7;}
+.setup-hint a{color:var(--orange);text-decoration:none;}
+.setup-hint a:hover{text-decoration:underline;}
+.setup-btn{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--orange),var(--orange2));color:#fff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:14px;font-weight:900;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.setup-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(255,92,0,.35);}
+.setup-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.setup-err{font-size:12px;color:var(--red);margin-bottom:12px;padding:8px 12px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:6px;}
+
+/* ── KEY BADGE in topbar ── */
+.key-btn{font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text3);cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;}
+.key-btn:hover{border-color:var(--orange);color:var(--orange);}
+
+/* ── MOBILE ── */
+@media(max-width:700px){
+  .sidebar{width:56px;min-width:56px;}
+  .sb-wordmark{font-size:14px;letter-spacing:1px;}
+  .sb-tagline,.sb-label,.sb-foot span:not(.pulse-dot){display:none;}
+  .sb-item span:last-child{display:none;}
+  .sb-item{justify-content:center;padding:10px;}
+  .sb-logo{padding:14px 10px;}
+  .sb-foot{justify-content:center;padding:10px;}
+  .tool-wrap{grid-template-columns:1fr;}
+  .out-panel{position:static;}
+  .home-grid{grid-template-columns:1fr;}
+  .flow-row{grid-template-columns:1fr;}
+  .items-hdr,.item-row{grid-template-columns:2fr .5fr 1fr 32px;}
+  .items-hdr span:nth-child(3),.item-row .unit-sel{display:none;}
+  .scroll{padding:14px 12px;}
+  .topbar{padding:0 14px;}
+  .setup-box{padding:28px 20px;}
+  .frow{flex-direction:column;gap:0;}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+const fmt = n => Number(n).toLocaleString('ja-JP');
+let uid = 0;
+const newItem = () => ({ id: ++uid, name: '', qty: 1, unit: '式', unitPrice: 0 });
+
+// ── API KEY管理 ──────────────────────────────────────────────
+const KEY_STORAGE = 'aiworks_api_key';
+const getKey = () => sessionStorage.getItem(KEY_STORAGE) || '';
+const saveKey = k => sessionStorage.setItem(KEY_STORAGE, k);
+
+async function callClaude(apiKey, systemPrompt, userPrompt) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1500,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userPrompt }]
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.content?.find(b => b.type === 'text')?.text || '';
+}
+
+// ── APIキー設定画面 ──────────────────────────────────────────
+function SetupScreen({ onSuccess }) {
+  const [key, setKey] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  const handleSubmit = async () => {
+    const k = key.trim();
+    if (!k.startsWith('sk-ant-')) {
+      setErr('APIキーは「sk-ant-」で始まる文字列です。確認してください。');
+      return;
+    }
+    setLoading(true); setErr('');
+    try {
+      await callClaude(k, 'あなたはテストです。', 'テスト');
+      saveKey(k);
+      onSuccess(k);
+    } catch(e) {
+      setErr(`接続に失敗しました: ${e.message}`);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="setup-overlay">
+      <div className="setup-box">
+        <div className="setup-logo">AI WORKS</div>
+        <div className="setup-sub">中小企業向け AIパック</div>
+        <div className="setup-title">🔑 APIキーを入力してください</div>
+        <div className="setup-desc">
+          このツールを使うにはAnthropicのAPIキーが必要です。<br/>
+          入力したキーはこのブラウザのセッション中のみ保持され、外部に送信されることはありません。
+        </div>
+        <div className="setup-label">APIキー</div>
+        <input
+          className="setup-input"
+          type="password"
+          placeholder="sk-ant-api03-..."
+          value={key}
+          onChange={e => setKey(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+          autoComplete="off"
+        />
+        <div className="setup-hint">
+          ※ APIキーは <a href="https://console.anthropic.com/account/keys" target="_blank">console.anthropic.com</a> で無料取得できます。<br/>
+          ※ ブラウザを閉じると自動的にリセットされます（セキュリティのため）。
+        </div>
+        {err && <div className="setup-err">⚠️ {err}</div>}
+        <button className="setup-btn" onClick={handleSubmit} disabled={loading || !key.trim()}>
+          {loading ? '⚙️ 接続確認中...' : '接続して始める →'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// 現場報告 AI
+// ═══════════════════════════════════════════════════════════
+function GenbaReport({ apiKey }) {
+  const [form, setForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    site: '', worker: '', weather: '晴れ', workType: '',
+    progress: '', issues: '', next: ''
+  });
+  const [photos, setPhotos] = useState([]);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('待機中');
+  const [toast, setToast] = useState(false);
+  const fileRef = useRef();
+
+  const sf = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const addPhotos = files => Array.from(files).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const r = new FileReader();
+    r.onload = e => setPhotos(p => [...p, { url: e.target.result, name: file.name }].slice(0, 4));
+    r.readAsDataURL(file);
+  });
+
+  const generate = async () => {
+    if (!form.site || !form.worker || !form.workType) { alert('現場名・担当者・作業種別は必須です'); return; }
+    setLoading(true); setStatus('AIが生成中...'); setResult(null);
+
+    const system = `あなたは建設・配管工事の現場監督経験を持つ、プロの報告書作成専門家です。
+現場の状況を的確に把握し、社内・顧客向けに読みやすく信頼性の高い現場日報を作成します。
+- 箇条書きは「・」を使い、各項目は具体的かつ簡潔に
+- 安全・品質面は必ず触れる
+- 問題がない場合も「特段の問題なし。作業は計画通り進捗」など明示する
+- 担当者所見は現場のリアルな観察を踏まえた建設的なコメントにする
+- JSONのみ返す。コードブロック不要`;
+
+    const user = `以下の情報をもとに現場日報を作成してください。
+
+【基本情報】
+作業日：${form.date} / 現場名：${form.site} / 担当者：${form.worker}
+天気：${form.weather} / 作業種別：${form.workType}
+
+【作業内容】
+${form.progress || '（未記載）'}
+
+【問題・特記事項】
+${form.issues || 'なし'}
+
+【翌日の予定】
+${form.next || '未定'}
+
+以下のJSON形式で返してください：
+{
+  "summary": "作業の全体像を2〜3文で。日付・現場・天気・種別を含む",
+  "work_detail": "本日の作業内容を箇条書きで3〜5項目。具体的な作業名・場所・数量を含む",
+  "safety": "安全管理・品質確認事項を箇条書きで2〜3項目",
+  "issues": "問題点と対策を箇条書き。なければ「特段の問題なし。作業は計画通り進捗」",
+  "next_plan": "翌日の作業予定を箇条書きで2〜3項目",
+  "comment": "担当者所見：現場の状況・課題・改善点など2〜3文の建設的なコメント"
+}`;
+
+    try {
+      const text = await callClaude(apiKey, system, user);
+      let d = {};
+      try { d = JSON.parse(text.trim()); } catch {
+        const m = text.match(/\{[\s\S]*\}/);
+        if (m) try { d = JSON.parse(m[0]); } catch {}
+      }
+      setResult({ ...form, photos: [...photos], ...d });
+      setStatus('生成完了');
+    } catch(e) { setStatus('エラー: ' + e.message); alert('エラーが発生しました: ' + e.message); }
+    finally { setLoading(false); }
+  };
+
+  const copy = () => {
+    if (!result) return;
+    const t = [
+      `【現場日報】${result.site}`,
+      `作業日：${result.date}　担当：${result.worker}　天気：${result.weather}`,
+      '', result.summary, '',
+      '■ 作業内容', result.work_detail, '',
+      '■ 安全・品質管理', result.safety, '',
+      '■ 問題点・対策', result.issues, '',
+      '■ 明日の作業予定', result.next_plan, '',
+      '■ 担当者所見', result.comment,
+    ].filter(x => x !== undefined).join('\n');
+    navigator.clipboard.writeText(t);
+    setToast(true); setTimeout(() => setToast(false), 2000);
+  };
+
+  const sections = result ? [
+    ['作業概要', result.summary],
+    ['本日の作業内容', result.work_detail],
+    ['安全・品質管理', result.safety],
+    ['問題点・対策', result.issues],
+    ['明日の作業予定', result.next_plan],
+    ['担当者所見', result.comment],
+  ].filter(([, v]) => v) : [];
+
+  return (
+    <div className="tool-wrap">
+      <div>
+        <div className="card">
+          <div className="card-head"><div className="card-num">1</div>基本情報</div>
+          <div className="frow">
+            <div className="fg">
+              <div className="flabel">作業日</div>
+              <input className="fi" type="date" value={form.date} onChange={e => sf('date', e.target.value)} />
+            </div>
+            <div className="fg">
+              <div className="flabel">天気</div>
+              <select className="fs" value={form.weather} onChange={e => sf('weather', e.target.value)}>
+                {['晴れ','曇り','雨','雪','晴れのち曇り','曇りのち雨'].map(w => <option key={w}>{w}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="frow">
+            <div className="fg">
+              <div className="flabel">現場名 <span className="req">必須</span></div>
+              <input className="fi" placeholder="例：○○ビル3F配管工事" value={form.site} onChange={e => sf('site', e.target.value)} />
+            </div>
+            <div className="fg">
+              <div className="flabel">担当者 <span className="req">必須</span></div>
+              <input className="fi" placeholder="例：田中 太郎" value={form.worker} onChange={e => sf('worker', e.target.value)} />
+            </div>
+          </div>
+          <div className="fg">
+            <div className="flabel">作業種別 <span className="req">必須</span></div>
+            <select className="fs" value={form.workType} onChange={e => sf('workType', e.target.value)}>
+              <option value="">選択してください</option>
+              {['給水管工事','排水管工事','ガス管工事','空調ダクト工事','電気配線工事','溶接作業','コンクリート打設','型枠工事','塗装工事','防水工事','その他'].map(t => <option key={t}>{t}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-head"><div className="card-num">2</div>作業内容</div>
+          <div className="fg">
+            <div className="flabel">本日の進捗・作業内容</div>
+            <textarea className="fta" rows={3} placeholder="例：3F〜4F間の給水管（VP50）配管。フロア貫通部の墨出しと先行配管を実施。約70%完了。" value={form.progress} onChange={e => sf('progress', e.target.value)} />
+          </div>
+          <div className="frow">
+            <div className="fg">
+              <div className="flabel">問題・特記事項</div>
+              <textarea className="fta" rows={2} placeholder="例：壁内に既存配管を発見。迂回ルートで対応。" value={form.issues} onChange={e => sf('issues', e.target.value)} />
+            </div>
+            <div className="fg">
+              <div className="flabel">翌日の予定</div>
+              <textarea className="fta" rows={2} placeholder="例：残り30%の配管完了後、水圧テスト実施。" value={form.next} onChange={e => sf('next', e.target.value)} />
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-head"><div className="card-num">3</div>現場写真（最大4枚・任意）</div>
+          <div className="photo-drop" onClick={() => fileRef.current?.click()}>
+            <input ref={fileRef} type="file" accept="image/*" multiple style={{display:'none'}} onChange={e => addPhotos(e.target.files)} />
+            <div style={{fontSize:24,marginBottom:4}}>📸</div>
+            <div style={{fontSize:12,color:'var(--text2)'}}>クリックして写真を追加</div>
+          </div>
+          {photos.length > 0 && (
+            <div className="photo-grid">
+              {photos.map((p, i) => (
+                <div className="photo-thumb" key={i}>
+                  <img src={p.url} alt="" />
+                  <button className="photo-del" onClick={() => setPhotos(ps => ps.filter((_, j) => j !== i))}>×</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <button className="btn-gen" onClick={generate} disabled={loading}>
+          {loading ? '⚙️ AIが生成中...' : '🤖 報告書を生成する'}
+        </button>
+      </div>
+
+      <div className="out-panel">
+        <div className="out-head">
+          <div className="out-title">✦ 生成された報告書</div>
+          {result && <div className="out-acts"><button className="out-btn" onClick={copy}>📋 コピー</button></div>}
+        </div>
+        <div className="out-body">
+          {!result && !loading && (
+            <div className="empty-state">
+              <div className="empty-icon">📋</div>
+              <div className="empty-text">フォームを入力して生成ボタンを押してください</div>
+            </div>
+          )}
+          {loading && <div className="loading-state"><div className="spinner" /><div className="loading-text">AIが報告書を作成しています...</div></div>}
+          {result && !loading && (
+            <>
+              {result.photos?.length > 0 && (
+                <div className="out-section">
+                  <div className="out-sec-label">現場写真</div>
+                  <div className="photo-grid">
+                    {result.photos.map((p, i) => <img key={i} src={p.url} style={{width:60,height:60,objectFit:'cover',borderRadius:6,border:'1px solid rgba(255,92,0,.2)'}} alt="" />)}
+                  </div>
+                </div>
+              )}
+              {sections.map(([label, val]) => (
+                <div className="out-section" key={label}>
+                  <div className="out-sec-label">{label}</div>
+                  <div className="out-text">{val}</div>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+        <div className="status-bar">
+          <div className={`status-dot${loading ? ' active' : ''}`} />{status}
+        </div>
+      </div>
+      <div className={`toast${toast ? ' show' : ''}`}>✅ クリップボードにコピーしました</div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// 見積もり AI
+// ═══════════════════════════════════════════════════════════
+function Mitsumori({ apiKey }) {
+  const [info, setInfo] = useState({ client: '', myName: '', project: '', note: '' });
+  const [items, setItems] = useState([newItem(), newItem(), newItem()]);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('待機中');
+  const [toast, setToast] = useState(false);
+
+  const si = (k, v) => setInfo(i => ({ ...i, [k]: v }));
+  const setItem = (id, k, v) => setItems(its => its.map(i => i.id === id ? { ...i, [k]: v } : i));
+  const validItems = items.filter(i => i.name && Number(i.unitPrice) > 0);
+  const subtotal = validItems.reduce((s, i) => s + (Number(i.qty) || 0) * (Number(i.unitPrice) || 0), 0);
+  const tax = Math.floor(subtotal * 0.1);
+  const total = subtotal + tax;
+
+  const generate = async () => {
+    if (!info.client || !info.project || !validItems.length) { alert('御見積先・案件名・明細（1行以上）は必須です'); return; }
+    setLoading(true); setStatus('AIが生成中...'); setResult(null);
+
+    const system = `あなたは建設・設備工事業界に精通したプロの見積書作成専門家です。
+顧客に信頼感を与え、工事の価値を的確に伝える見積書の文章を作成します。
+- 案件概要は工事の意義・目的・効果を含む説得力のある文章にする
+- 備考は支払条件・工期・保証・施工体制など実務的かつ顧客安心につながる内容にする
+- JSONのみ返す。コードブロック不要`;
+
+    const user = `以下の見積情報をもとに、案件概要と備考を作成してください。
+
+【案件情報】
+御見積先：${info.client} / 案件名：${info.project}
+税込合計：¥${fmt(total)}
+追記メモ：${info.note || 'なし'}
+
+【明細】
+${validItems.map(i => `・${i.name}：${i.qty}${i.unit} × ¥${fmt(Number(i.unitPrice))} = ¥${fmt((Number(i.qty)||0)*(Number(i.unitPrice)||0))}`).join('\n')}
+
+以下のJSON形式で返してください：
+{
+  "summary": "案件概要を2〜3文。工事の目的・範囲・効果を含む具体的な説明",
+  "remarks": "備考・補足事項を箇条書き5〜6項目。支払条件・工期目安・保証内容・施工体制・注意事項・有効期限を含む"
+}`;
+
+    try {
+      const text = await callClaude(apiKey, system, user);
+      let d = {};
+      try { d = JSON.parse(text.trim()); } catch {
+        const m = text.match(/\{[\s\S]*\}/);
+        if (m) try { d = JSON.parse(m[0]); } catch {}
+      }
+      setResult({ ...info, items: validItems, subtotal, tax, total, date: new Date().toLocaleDateString('ja-JP'), ...d });
+      setStatus('生成完了');
+    } catch(e) { setStatus('エラー: ' + e.message); alert('エラーが発生しました: ' + e.message); }
+    finally { setLoading(false); }
+  };
+
+  const copy = () => {
+    if (!result) return;
+    const t = [
+      `【御見積書】`,
+      `${result.client} 御中`,
+      `発行日：${result.date} / 案件：${result.project}`,
+      '',
+      result.items.map(i => `${i.name}　${i.qty}${i.unit}　¥${fmt(Number(i.unitPrice))}　¥${fmt((Number(i.qty)||0)*(Number(i.unitPrice)||0))}`).join('\n'),
+      '',
+      `小計：¥${fmt(result.subtotal)}`,
+      `消費税（10%）：¥${fmt(result.tax)}`,
+      `合計（税込）：¥${fmt(result.total)}`,
+      '', '【備考】', result.remarks,
+    ].join('\n');
+    navigator.clipboard.writeText(t);
+    setToast(true); setTimeout(() => setToast(false), 2000);
+  };
+
+  return (
+    <div className="tool-wrap">
+      <div>
+        <div className="card">
+          <div className="card-head"><div className="card-num">1</div>基本情報</div>
+          <div className="frow">
+            <div className="fg">
+              <div className="flabel">御見積先 <span className="req">必須</span></div>
+              <input className="fi" placeholder="例：株式会社○○建設" value={info.client} onChange={e => si('client', e.target.value)} />
+            </div>
+            <div className="fg">
+              <div className="flabel">自社名</div>
+              <input className="fi" placeholder="例：田中配管工業" value={info.myName} onChange={e => si('myName', e.target.value)} />
+            </div>
+          </div>
+          <div className="fg">
+            <div className="flabel">案件名 <span className="req">必須</span></div>
+            <input className="fi" placeholder="例：○○ビル3F 給排水管改修工事" value={info.project} onChange={e => si('project', e.target.value)} />
+          </div>
+          <div className="fg">
+            <div className="flabel">特記メモ（保証・工期・条件など）</div>
+            <input className="fi" placeholder="例：保証2年、施工期間2週間" value={info.note} onChange={e => si('note', e.target.value)} />
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-head"><div className="card-num">2</div>見積明細 <span className="req">必須</span></div>
+          <div className="items-hdr">
+            <span>品名・作業内容</span><span>数量</span><span>単位</span>
+            <span style={{textAlign:'right'}}>単価（円）</span><span></span>
+          </div>
+          {items.map(item => (
+            <div className="item-row" key={item.id}>
+              <input className="ii" placeholder="例：給水管VP50配管工事" value={item.name} onChange={e => setItem(item.id,'name',e.target.value)} />
+              <input className="ii ii-r" type="number" min="1" value={item.qty} onChange={e => setItem(item.id,'qty',e.target.value)} />
+              <select className="ii unit-sel" value={item.unit} onChange={e => setItem(item.id,'unit',e.target.value)}>
+                {['式','m','本','個','枚','台','人工','㎡','箇所'].map(u => <option key={u}>{u}</option>)}
+              </select>
+              <input className="ii ii-r" type="number" min="0" placeholder="0" value={item.unitPrice||''} onChange={e => setItem(item.id,'unitPrice',e.target.value)} />
+              <button className="ii-del" onClick={() => setItems(its => its.filter(i => i.id !== item.id))}>🗑</button>
+            </div>
+          ))}
+          <button className="add-item" onClick={() => setItems(its => [...its, newItem()])}>＋ 行を追加</button>
+          <div className="subtotal">
+            <div className="st-row"><span>小計</span><span>¥{fmt(subtotal)}</span></div>
+            <div className="st-row"><span>消費税 10%</span><span>¥{fmt(tax)}</span></div>
+            <div className="st-row total-row"><span>合計（税込）</span><span>¥{fmt(total)}</span></div>
+          </div>
+        </div>
+
+        <button className="btn-gen" onClick={generate} disabled={loading}>
+          {loading ? '⚙️ AIが生成中...' : '🤖 見積書を生成する'}
+        </button>
+      </div>
+
+      <div className="out-panel">
+        <div className="out-head">
+          <div className="out-title">✦ 生成された見積書</div>
+          {result && <div className="out-acts"><button className="out-btn" onClick={copy}>📋 コピー</button></div>}
+        </div>
+        <div className="out-body">
+          {!result && !loading && (
+            <div className="empty-state">
+              <div className="empty-icon">💴</div>
+              <div className="empty-text">明細を入力して生成ボタンを押してください</div>
+            </div>
+          )}
+          {loading && <div className="loading-state"><div className="spinner" /><div className="loading-text">AIが見積書を作成しています...</div></div>}
+          {result && !loading && (
+            <>
+              <div className="out-section">
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:12}}>
+                  <div>
+                    <div style={{fontSize:16,fontWeight:900,color:'var(--gold)',marginBottom:2}}>{result.myName||'御社'}</div>
+                    <div style={{fontSize:11,color:'var(--text2)'}}>御見積書　発行日：{result.date}</div>
+                  </div>
+                  <div style={{textAlign:'right',fontSize:11,color:'var(--text2)'}}>{result.client} 御中</div>
+                </div>
+                <div style={{fontSize:14,fontWeight:900,color:'var(--text)',marginBottom:6}}>📋 {result.project}</div>
+                {result.summary && <div className="out-text">{result.summary}</div>}
+              </div>
+              <div className="out-section">
+                <div className="out-sec-label">見積明細</div>
+                <table className="qt">
+                  <thead><tr><th>品名</th><th>数量</th><th>単位</th><th className="r">単価</th><th className="r">金額</th></tr></thead>
+                  <tbody>
+                    {result.items.map((item, i) => (
+                      <tr key={i}>
+                        <td>{item.name}</td><td>{item.qty}</td><td>{item.unit}</td>
+                        <td className="r">¥{fmt(Number(item.unitPrice))}</td>
+                        <td className="r">¥{fmt((Number(item.qty)||0)*(Number(item.unitPrice)||0))}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="qt-total">
+                  <div className="qt-row"><span>小計</span><span>¥{fmt(result.subtotal)}</span></div>
+                  <div className="qt-row"><span>消費税（10%）</span><span>¥{fmt(result.tax)}</span></div>
+                  <div className="qt-row final"><span>御見積合計</span><span>¥{fmt(result.total)}</span></div>
+                </div>
+              </div>
+              {result.remarks && (
+                <div className="out-section">
+                  <div className="out-sec-label">備考・補足事項</div>
+                  <div className="out-text">{result.remarks}</div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+        <div className="status-bar"><div className={`status-dot${loading?' active':''}`}/>{status}</div>
+      </div>
+      <div className={`toast${toast?' show':''}`}>✅ クリップボードにコピーしました</div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// 議事録 AI
+// ═══════════════════════════════════════════════════════════
+function Gijiroku({ apiKey }) {
+  const [info, setInfo] = useState({ title: '', date: new Date().toISOString().split('T')[0], location: '' });
+  const [participants, setParticipants] = useState([]);
+  const [pInput, setPInput] = useState('');
+  const [mode, setMode] = useState('text');
+  const [rawText, setRawText] = useState('');
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('待機中');
+  const [toast, setToast] = useState(false);
+
+  const si = (k, v) => setInfo(i => ({ ...i, [k]: v }));
+
+  const addP = e => {
+    if ((e.key === 'Enter' || e.key === ',') && pInput.trim()) {
+      e.preventDefault();
+      setParticipants(p => [...p, pInput.trim()]);
+      setPInput('');
+    }
+  };
+
+  const generate = async () => {
+    if (!info.title || !rawText.trim()) { alert('会議名と会議内容は必須です'); return; }
+    setLoading(true); setStatus('AIが生成中...'); setResult(null);
+
+    const system = `あなたは会議ファシリテーションと議事録作成の専門家です。
+乱雑な会議メモや発言記録から、構造化された読みやすい議事録を作成します。
+- 会議概要は会議の目的・主要な議題・結論を含む簡潔な要約
+- 議題・討議は話し合われた内容を論点ごとに整理する
+- 決定事項は「誰が・何を・いつまでに」を明確にする
+- アクションアイテムは必ず担当者と期限を抽出する（記載がなければ「要確認」とする）
+- JSONのみ返す。コードブロック不要`;
+
+    const user = `以下の会議情報・メモをもとに議事録を作成してください。
+
+【会議情報】
+会議名：${info.title}
+日時：${info.date}
+場所・形式：${info.location||'未記載'}
+参加者：${participants.join('、')||'未記載'}
+
+【会議メモ・内容】
+${rawText}
+
+以下のJSON形式で返してください：
+{
+  "summary": "会議概要を2〜3文。目的・主な議題・全体的な結論を含む",
+  "agenda": "議題・討議内容を箇条書きで3〜6項目。論点ごとに整理",
+  "decisions": "決定事項を箇条書きで2〜5項目。具体的かつ明確に",
+  "actions": [{"task": "タスク内容", "owner": "担当者名（不明なら「要確認」）", "deadline": "期限（不明なら「要確認」）"}],
+  "next_meeting": "次回会議の日程・議題（記載があれば。なければ空文字）"
+}`;
+
+    try {
+      const text = await callClaude(apiKey, system, user);
+      let d = {};
+      try { d = JSON.parse(text.trim()); } catch {
+        const m = text.match(/\{[\s\S]*\}/);
+        if (m) try { d = JSON.parse(m[0]); } catch {}
+      }
+      setResult({ ...info, participants: [...participants], ...d });
+      setStatus('生成完了');
+    } catch(e) { setStatus('エラー: ' + e.message); alert('エラーが発生しました: ' + e.message); }
+    finally { setLoading(false); }
+  };
+
+  const copy = () => {
+    if (!result) return;
+    const actions = (result.actions||[]).map(a => `・${a.task}　担当：${a.owner}　期限：${a.deadline}`).join('\n');
+    const t = [
+      `【議事録】${result.title}`,
+      `日時：${result.date}　場所：${result.location||'－'}`,
+      `参加者：${result.participants.join('、')||'－'}`,
+      '', '■ 会議概要', result.summary,
+      '', '■ 議題・討議内容', result.agenda,
+      '', '■ 決定事項', result.decisions,
+      '', '■ アクションアイテム', actions,
+      ...(result.next_meeting ? ['', '■ 次回会議', result.next_meeting] : []),
+    ].join('\n');
+    navigator.clipboard.writeText(t);
+    setToast(true); setTimeout(() => setToast(false), 2000);
+  };
+
+  return (
+    <div className="tool-wrap">
+      <div>
+        <div className="card">
+          <div className="card-head"><div className="card-num">1</div>会議情報</div>
+          <div className="fg">
+            <div className="flabel">会議名 <span className="req">必須</span></div>
+            <input className="fi" placeholder="例：週次定例MTG / 現場打合せ" value={info.title} onChange={e => si('title', e.target.value)} />
+          </div>
+          <div className="frow">
+            <div className="fg">
+              <div className="flabel">日時</div>
+              <input className="fi" type="date" value={info.date} onChange={e => si('date', e.target.value)} />
+            </div>
+            <div className="fg">
+              <div className="flabel">場所・形式</div>
+              <input className="fi" placeholder="例：会議室A / Zoom" value={info.location} onChange={e => si('location', e.target.value)} />
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-head"><div className="card-num">2</div>参加者</div>
+          <div className="tag-wrap">
+            {participants.map((p, i) => (
+              <div className="tag" key={i}>
+                {p}
+                <button className="tag-x" onClick={() => setParticipants(ps => ps.filter((_,j) => j !== i))}>×</button>
+              </div>
+            ))}
+            <input className="tag-input" placeholder="名前を入力してEnterで追加..." value={pInput} onChange={e => setPInput(e.target.value)} onKeyDown={addP} />
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-head"><div className="card-num">3</div>会議内容 <span className="req">必須</span></div>
+          <div className="mode-tabs">
+            <button className={`mode-tab${mode==='text'?' active':''}`} onClick={() => setMode('text')}>✏️ テキスト入力</button>
+            <button className={`mode-tab${mode==='voice'?' active':''}`} onClick={() => setMode('voice')}>🎙️ 文字起こし貼付</button>
+          </div>
+          <textarea className="fta" rows={9}
+            placeholder={mode==='text'
+              ? '会議で話し合った内容をそのまま入力してください。\n\n例：\n・新規案件Aの進捗：田中さんから配管図面の変更報告\n・来週の現場立会いは木曜に決定\n・見積もり再提出は15日までに対応'
+              : '音声文字起こしのテキストをここに貼り付けてください...'}
+            value={rawText} onChange={e => setRawText(e.target.value)} />
+        </div>
+
+        <button className="btn-gen" onClick={generate} disabled={loading}>
+          {loading ? '⚙️ AIが生成中...' : '🤖 議事録を生成する'}
+        </button>
+      </div>
+
+      <div className="out-panel">
+        <div className="out-head">
+          <div className="out-title">✦ 生成された議事録</div>
+          {result && <div className="out-acts"><button className="out-btn" onClick={copy}>📋 コピー</button></div>}
+        </div>
+        <div className="out-body">
+          {!result && !loading && (
+            <div className="empty-state">
+              <div className="empty-icon">📝</div>
+              <div className="empty-text">会議情報と内容を入力して生成してください</div>
+            </div>
+          )}
+          {loading && <div className="loading-state"><div className="spinner" /><div className="loading-text">AIが議事録を作成しています...</div></div>}
+          {result && !loading && (
+            <>
+              <div className="out-section">
+                <div style={{background:'rgba(6,182,212,.06)',border:'1px solid rgba(6,182,212,.15)',borderRadius:8,padding:'12px 14px'}}>
+                  <div style={{fontSize:15,fontWeight:900,color:'var(--cyan)',marginBottom:5}}>{result.title}</div>
+                  <div style={{fontSize:11,color:'var(--text2)',lineHeight:1.8}}>
+                    📅 {result.date}{result.location?`　📍 ${result.location}`:''}
+                    {result.participants?.length > 0 && <><br/>👥 {result.participants.join('、')}</>}
+                  </div>
+                </div>
+              </div>
+              {result.summary && <div className="out-section"><div className="out-sec-label">会議概要</div><div className="out-text">{result.summary}</div></div>}
+              {result.agenda && <div className="out-section"><div className="out-sec-label">議題・討議内容</div><div className="out-text">{result.agenda}</div></div>}
+              {result.decisions && <div className="out-section"><div className="out-sec-label">決定事項</div><div className="out-text">{result.decisions}</div></div>}
+              {result.actions?.length > 0 && (
+                <div className="out-section">
+                  <div className="out-sec-label">アクションアイテム</div>
+                  <div className="action-list">
+                    {result.actions.map((a,i) => (
+                      <div className="action-item" key={i}>
+                        <div className="a-dot"/>
+                        <div className="a-body">
+                          <div className="a-task">{a.task}</div>
+                          <div className="a-meta">
+                            {a.owner&&`担当：${a.owner}`}
+                            {a.owner&&a.deadline&&'　'}
+                            {a.deadline&&`期限：${a.deadline}`}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {result.next_meeting && <div className="out-section"><div className="out-sec-label">次回会議</div><div className="out-text">{result.next_meeting}</div></div>}
+            </>
+          )}
+        </div>
+        <div className="status-bar"><div className={`status-dot${loading?' active':''}`}/>{status}</div>
+      </div>
+      <div className={`toast${toast?' show':''}`}>✅ クリップボードにコピーしました</div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// HOME
+// ═══════════════════════════════════════════════════════════
+function Home({ onNav }) {
+  return (
+    <div>
+      <div style={{marginBottom:24}}>
+        <div style={{fontSize:22,fontWeight:900,marginBottom:4}}>ダッシュボード</div>
+        <div style={{fontSize:13,color:'var(--text2)'}}>3つのAIツールで現場の書類作業を自動化します</div>
+      </div>
+      <div style={{fontSize:9,color:'var(--text3)',letterSpacing:3,textTransform:'uppercase',marginBottom:10}}>AIツール</div>
+      <div className="home-grid">
+        {[
+          { key:'report', icon:'📋', name:'現場報告AI', desc:'写真を添付して、プロ品質の現場日報を自動生成。毎日の報告書作業を5分に短縮。', color:'orange' },
+          { key:'quote',  icon:'💰', name:'見積もりAI', desc:'明細を入力するだけで、案件概要・備考付きの見積書を即作成。', color:'gold' },
+          { key:'minutes',icon:'📝', name:'議事録AI',   desc:'会議メモを貼るだけで、決定事項・アクションアイテムを自動整理。', color:'cyan' },
+        ].map(t => (
+          <div className={`home-card ${t.color}`} key={t.key} onClick={() => onNav(t.key)}>
+            <div className="hc-icon">{t.icon}</div>
+            <div className="hc-name">{t.name}</div>
+            <div className="hc-desc">{t.desc}</div>
+            <div className="hc-arrow">→</div>
+          </div>
+        ))}
+      </div>
+      <div style={{fontSize:9,color:'var(--text3)',letterSpacing:3,textTransform:'uppercase',marginBottom:10}}>使い方</div>
+      <div className="flow-row">
+        {[
+          { n:'1', title:'情報を入力', desc:'必要項目を入力。入力は最小限に絞っています。' },
+          { n:'2', title:'AIが自動生成', desc:'ボタン1つでClaudeが高品質な文書を作成します。' },
+          { n:'3', title:'コピーして使う', desc:'生成された文書を1クリックでコピーして活用。' },
+        ].map(s => (
+          <div className="flow-card" key={s.n}>
+            <div className="flow-n">{s.n}</div>
+            <div className="flow-text"><strong>{s.title}</strong>{s.desc}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{background:'rgba(255,92,0,.06)',border:'1px solid rgba(255,92,0,.15)',borderRadius:10,padding:16,marginTop:4}}>
+        <div style={{fontSize:12,fontWeight:700,color:'var(--orange)',marginBottom:5}}>💡 AI導入パックについて</div>
+        <div style={{fontSize:12,color:'var(--text2)',lineHeight:1.8}}>
+          このダッシュボードは「AI導入パック 500,000円」に含まれる3つのAIツールです。<br/>
+          「AIサポート 月額50,000円」でアップデート・改善・サポートを継続提供します。
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// APP
+// ═══════════════════════════════════════════════════════════
+const NAVS = [
+  { key:'home',    icon:'🏠', label:'ダッシュボード' },
+  { key:'report',  icon:'📋', label:'現場報告AI' },
+  { key:'quote',   icon:'💰', label:'見積もりAI' },
+  { key:'minutes', icon:'📝', label:'議事録AI' },
+];
+const TITLES = { home:'AI WORKS', report:'現場報告AI', quote:'見積もりAI', minutes:'議事録AI' };
+
+export default function App() {
+  const [apiKey, setApiKey] = useState(getKey);
+  const [page, setPage] = useState('home');
+
+  if (!apiKey) {
+    return <SetupScreen onSuccess={setApiKey} />;
+  }
+
+  return (
+    <div className="shell">
+      <aside className="sidebar">
+        <div className="sb-logo">
+          <div className="sb-wordmark">AI WORKS</div>
+          <div className="sb-tagline">中小企業向け AIパック</div>
+        </div>
+        <nav className="sb-nav">
+          <div className="sb-label">メニュー</div>
+          {NAVS.map(n => (
+            <div key={n.key} className={`sb-item${page===n.key?' active':''}`} onClick={() => setPage(n.key)}>
+              <span className="sb-icon">{n.icon}</span><span>{n.label}</span>
+            </div>
+          ))}
+        </nav>
+        <div className="sb-foot">
+          <div className="pulse-dot"/>
+          <span>Claude API 接続中</span>
+        </div>
+      </aside>
+
+      <div className="content">
+        <div className="topbar">
+          <div className="topbar-title">{TITLES[page]}</div>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <button className="key-btn" onClick={() => { sessionStorage.removeItem('aiworks_api_key'); setApiKey(''); }}>🔑 キー変更</button>
+            <div className="topbar-badge">AI POWERED</div>
+          </div>
+        </div>
+        <div className="scroll">
+          {page==='home'    && <Home onNav={setPage} />}
+          {page==='report'  && <GenbaReport apiKey={apiKey} />}
+          {page==='quote'   && <Mitsumori apiKey={apiKey} />}
+          {page==='minutes' && <Gijiroku apiKey={apiKey} />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
