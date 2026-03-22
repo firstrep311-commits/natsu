@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AI WORKS — 現場AIツール</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0A0F1E;--surface:#111827;--surface2:#1A2235;
+  --border:rgba(255,255,255,0.08);--orange:#FF5C00;--orange2:#FF8C42;
+  --gold:#F0B429;--green:#22C55E;--cyan:#06B6D4;--red:#EF4444;
+  --text:#F1F5F9;--text2:#94A3B8;--text3:#475569;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;-webkit-text-size-adjust:100%;}
+
+/* ── LAYOUT ── */
+.shell{display:flex;height:100vh;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:72px;min-width:72px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;}
+.sb-logo{padding:16px 0 14px;border-bottom:1px solid var(--border);width:100%;text-align:center;}
+.sb-wordmark{font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--orange);line-height:1.3;}
+.sb-nav{padding:10px 0;flex:1;width:100%;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.sb-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:10px;cursor:pointer;width:60px;transition:all .15s;}
+.sb-item:hover{background:rgba(255,255,255,.04);}
+.sb-item.active{background:rgba(255,92,0,.14);outline:1px solid rgba(255,92,0,.25);}
+.sb-icon{font-size:22px;}
+.sb-lbl{font-size:9px;color:var(--text3);text-align:center;line-height:1.3;font-weight:700;}
+.sb-item.active .sb-lbl{color:var(--orange);}
+.sb-foot{padding:12px 0;border-top:1px solid var(--border);width:100%;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2.5s ease infinite;}
+.sb-foot-lbl{font-size:8px;color:var(--text3);text-align:center;line-height:1.4;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.8);}}
+
+/* ── CONTENT ── */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;}
+.topbar-title{font-family:'Oswald',sans-serif;font-size:17px;letter-spacing:2px;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.topbar-badge{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;background:rgba(255,92,0,.12);color:var(--orange);outline:1px solid rgba(255,92,0,.2);}
+.key-btn{font-size:11px;padding:5px 11px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text3);cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;}
+.key-btn:hover{border-color:var(--orange);color:var(--orange);}
+.scroll{flex:1;overflow-y:auto;padding:20px 18px 40px;}
+.scroll::-webkit-scrollbar{width:3px;}
+.scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);}
+
+/* ── TOOL LAYOUT ── */
+.tool-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
+
+/* ── CARD ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px;}
+.card-head{font-size:13px;font-weight:900;color:var(--orange);display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+.card-num{width:22px;height:22px;border-radius:50%;background:var(--orange);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* ── FORM ── */
+.fg{margin-bottom:14px;}
+.flabel{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.req{font-size:9px;background:var(--orange);color:#fff;padding:2px 5px;border-radius:3px;font-weight:900;}
+.fi,.fs,.fta{
+  width:100%;background:rgba(10,15,30,.8);border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;padding:12px 14px;color:var(--text);
+  font-family:'Zen Kaku Gothic New',sans-serif;font-size:15px;outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.fi:focus,.fs:focus,.fta:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,92,0,.1);}
+.fs option{background:var(--surface);}
+.fta{resize:vertical;min-height:90px;line-height:1.8;}
+.frow{display:flex;gap:10px;}
+.frow .fg{flex:1;}
+
+/* ── HINT TEXT ── */
+.fhint{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.6;}
+
+/* ── BTN ── */
+.btn-gen{
+  width:100%;padding:16px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,var(--orange),var(--orange2));
+  color:#fff;font-family:'Zen Kaku Gothic New',sans-serif;
+  font-size:16px;font-weight:900;letter-spacing:1px;cursor:pointer;
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 4px 20px rgba(255,92,0,.25);
+}
+.btn-gen:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 28px rgba(255,92,0,.4);}
+.btn-gen:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
+
+/* ── OUTPUT PANEL ── */
+.out-panel{background:rgba(10,15,30,.9);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:sticky;top:0;}
+.out-head{padding:14px 18px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.out-title{font-size:11px;font-weight:700;color:var(--green);letter-spacing:2px;text-transform:uppercase;}
+.out-acts{display:flex;gap:6px;}
+.out-btn{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:6px;padding:6px 12px;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;}
+.out-btn:hover{background:rgba(34,197,94,.18);}
+.out-body{padding:20px;min-height:280px;max-height:68vh;overflow-y:auto;}
+.out-body::-webkit-scrollbar{width:3px;}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:260px;color:var(--text3);gap:10px;text-align:center;}
+.empty-icon{font-size:44px;opacity:.18;}
+.empty-text{font-size:14px;line-height:1.7;}
+.loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:260px;gap:16px;}
+.spinner{width:40px;height:40px;border-radius:50%;border:3px solid rgba(255,92,0,.15);border-top-color:var(--orange);animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-size:14px;color:var(--text2);}
+.out-section{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.05);}
+.out-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.out-sec-label{font-size:10px;font-weight:700;color:var(--orange);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.out-text{font-size:14px;line-height:2;color:rgba(241,245,249,.85);white-space:pre-wrap;}
+.status-bar{padding:10px 18px;background:rgba(10,15,30,.6);border-top:1px solid var(--border);display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text3);}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2.5s ease infinite;}
+.status-dot.active{background:var(--orange);animation:spin .8s linear infinite;border-radius:50%;border:2px solid var(--orange);border-top-color:transparent;}
+
+/* ── QUOTE TABLE ── */
+.qt{width:100%;border-collapse:collapse;margin:10px 0;}
+.qt th{background:rgba(240,180,41,.1);color:var(--gold);font-size:11px;padding:8px 10px;text-align:left;font-weight:700;}
+.qt td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;color:rgba(241,245,249,.8);}
+.qt .r{text-align:right;}
+.qt-total{background:rgba(240,180,41,.05);border-radius:8px;padding:14px;margin:10px 0;}
+.qt-row{display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:5px;}
+.qt-row.final{font-size:20px;font-weight:900;color:var(--gold);margin-top:8px;border-top:1px solid rgba(255,255,255,.08);padding-top:8px;}
+
+/* ── ITEMS TABLE ── */
+.items-hdr{display:grid;grid-template-columns:2.5fr .6fr .6fr 1.1fr 36px;gap:6px;padding:7px 8px;background:rgba(255,92,0,.06);border-radius:6px;font-size:11px;color:var(--text3);margin-bottom:5px;}
+.item-row{display:grid;grid-template-columns:2.5fr .6fr .6fr 1.1fr 36px;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03);align-items:center;}
+.ii{background:rgba(10,15,30,.8);border:1px solid rgba(255,255,255,.08);border-radius:7px;padding:8px 10px;width:100%;font-family:'Zen Kaku Gothic New',sans-serif;font-size:14px;color:var(--text);outline:none;}
+.ii:focus{border-color:var(--orange);}
+.ii-r{text-align:right;}
+.ii-del{background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;transition:color .15s;padding:4px;}
+.ii-del:hover{color:var(--red);}
+.add-item{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;width:100%;padding:10px;background:none;border:1px dashed rgba(255,92,0,.25);border-radius:10px;cursor:pointer;color:var(--text3);font-size:14px;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;}
+.add-item:hover{border-color:var(--orange);color:var(--orange);}
+.subtotal{margin-top:12px;padding:14px;background:rgba(10,15,30,.8);border-radius:10px;}
+.st-row{display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:5px;}
+.st-row.total-row{font-size:17px;font-weight:900;color:var(--text);border-top:1px solid var(--border);padding-top:8px;margin-top:5px;}
+
+/* ── TAG INPUT ── */
+.tag-wrap{display:flex;flex-wrap:wrap;gap:6px;min-height:46px;background:rgba(10,15,30,.8);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 12px;}
+.tag-wrap:focus-within{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,92,0,.1);}
+.tag{background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.28);border-radius:14px;padding:3px 10px;font-size:13px;color:var(--cyan);display:flex;align-items:center;gap:4px;}
+.tag-x{background:none;border:none;color:var(--cyan);cursor:pointer;font-size:14px;opacity:.7;padding:0 2px;}
+.tag-x:hover{opacity:1;}
+.tag-input{background:none;border:none;outline:none;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:14px;flex:1;min-width:100px;padding:2px 0;}
+.tag-input::placeholder{color:var(--text3);}
+
+/* ── PHOTO UPLOAD ── */
+.photo-drop{border:2px dashed rgba(255,92,0,.25);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .15s;}
+.photo-drop:hover{border-color:var(--orange);background:rgba(255,92,0,.03);}
+.photo-drop-icon{font-size:30px;margin-bottom:6px;}
+.photo-drop-text{font-size:14px;color:var(--text2);}
+.photo-drop-sub{font-size:11px;color:var(--text3);margin-top:4px;}
+.photo-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.photo-thumb{position:relative;width:72px;height:72px;}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid rgba(255,92,0,.25);}
+.photo-del{position:absolute;top:-5px;right:-5px;width:20px;height:20px;border-radius:50%;background:var(--red);border:none;cursor:pointer;font-size:11px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;}
+
+/* ── MODE TABS ── */
+.mode-tabs{display:flex;background:rgba(10,15,30,.8);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:4px;margin-bottom:14px;}
+.mode-tab{flex:1;padding:9px;border-radius:7px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;color:var(--text3);background:none;}
+.mode-tab.active{background:rgba(255,92,0,.15);color:var(--orange);outline:1px solid rgba(255,92,0,.25);}
+
+/* ── ACTION ITEMS ── */
+.action-list{display:flex;flex-direction:column;gap:8px;}
+.action-item{background:rgba(34,197,94,.04);border:1px solid rgba(34,197,94,.12);border-radius:8px;padding:11px 14px;display:flex;gap:10px;align-items:flex-start;}
+.a-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:6px;}
+.a-body{flex:1;}
+.a-task{font-size:14px;color:rgba(241,245,249,.9);line-height:1.5;}
+.a-meta{font-size:11px;color:var(--green);margin-top:4px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#0A0F1E;padding:10px 24px;border-radius:24px;font-weight:900;font-size:14px;transition:transform .25s ease;z-index:9999;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ── HOME ── */
+.home-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;}
+.home-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden;}
+.home-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;opacity:0;transition:opacity .18s;}
+.home-card.orange::after{background:linear-gradient(90deg,var(--orange),transparent);}
+.home-card.gold::after{background:linear-gradient(90deg,var(--gold),transparent);}
+.home-card.cyan::after{background:linear-gradient(90deg,var(--cyan),transparent);}
+.home-card:hover{transform:translateY(-3px);}
+.home-card:hover::after{opacity:1;}
+.hc-icon{font-size:30px;margin-bottom:10px;}
+.hc-name{font-size:16px;font-weight:900;color:var(--text);margin-bottom:5px;}
+.hc-desc{font-size:12px;color:var(--text2);line-height:1.7;padding-right:24px;}
+.hc-arrow{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--orange);font-size:20px;opacity:.5;}
+.flow-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px;}
+.flow-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;gap:12px;}
+.flow-n{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:rgba(255,92,0,.12);border:1px solid rgba(255,92,0,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--orange);}
+.flow-text{font-size:13px;color:var(--text2);line-height:1.7;}
+.flow-text strong{display:block;color:var(--text);font-size:14px;margin-bottom:3px;}
+
+/* ── HELP MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;}
+.modal-head{padding:20px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);}
+.modal-title{font-size:16px;font-weight:900;}
+.modal-close{background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer;line-height:1;padding:2px 6px;}
+.modal-close:hover{color:var(--text);}
+.modal-body{padding:22px;}
+.help-step{display:flex;gap:14px;margin-bottom:20px;align-items:flex-start;}
+.help-num{width:32px;height:32px;border-radius:50%;background:rgba(255,92,0,.12);border:1px solid rgba(255,92,0,.3);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:var(--orange);flex-shrink:0;}
+.help-content{}
+.help-title{font-size:15px;font-weight:900;margin-bottom:4px;}
+.help-desc{font-size:13px;color:var(--text2);line-height:1.7;}
+.help-img{margin-top:8px;background:rgba(255,92,0,.05);border:1px solid rgba(255,92,0,.15);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text2);line-height:1.8;}
+.help-tip{background:rgba(34,197,94,.05);border:1px solid rgba(34,197,94,.15);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--green);line-height:1.7;margin-top:16px;}
+
+/* ── HELP BTN ── */
+.help-btn{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--text3);font-size:12px;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif;transition:all .15s;display:flex;align-items:center;gap:5px;}
+.help-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+
+/* ── SETUP SCREEN ── */
+.setup-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px;overflow-y:auto;}
+.setup-wrap{max-width:520px;width:100%;padding:16px 0;}
+.setup-box{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:36px 32px;margin-bottom:14px;}
+.setup-logo{font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;letter-spacing:3px;color:var(--orange);margin-bottom:3px;}
+.setup-sub{font-size:11px;color:var(--text3);letter-spacing:2px;margin-bottom:28px;}
+.setup-section-title{font-size:18px;font-weight:900;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.setup-desc{font-size:14px;color:var(--text2);line-height:1.9;margin-bottom:24px;}
+
+/* ── GUIDE STEPS ── */
+.guide-steps{margin-bottom:28px;}
+.guide-step{display:flex;gap:14px;margin-bottom:16px;align-items:flex-start;}
+.guide-step-num{width:28px;height:28px;border-radius:50%;background:var(--orange);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.guide-step-body{}
+.guide-step-title{font-size:14px;font-weight:900;margin-bottom:3px;}
+.guide-step-desc{font-size:13px;color:var(--text2);line-height:1.7;}
+.guide-step-link{display:inline-block;margin-top:6px;background:rgba(255,92,0,.1);border:1px solid rgba(255,92,0,.25);border-radius:7px;padding:7px 14px;color:var(--orange);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;}
+.guide-step-link:hover{background:rgba(255,92,0,.18);}
+.guide-code{background:rgba(10,15,30,.9);border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:8px 12px;font-size:13px;color:var(--cyan);font-family:monospace;margin-top:6px;word-break:break-all;}
+
+.setup-label{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:7px;display:flex;align-items:center;gap:6px;}
+.setup-input{width:100%;background:rgba(10,15,30,.8);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:14px 16px;color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;font-size:16px;outline:none;margin-bottom:6px;transition:border-color .15s;}
+.setup-input:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,92,0,.1);}
+.setup-input-hint{font-size:12px;color:var(--text3);margin-bottom:22px;line-height:1.7;}
+.setup-btn{width:100%;padding:16px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--orange),var(--orange2));color:#fff;font-family:'Zen Kaku Gothic New',sans-serif;font-size:16px;font-weight:900;letter-spacing:1px;cursor:pointer;transition:all .2s;box-shadow:0 4px 20px rgba(255,92,0,.25);}
+.setup-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 28px rgba(255,92,0,.4);}
+.setup-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
+.setup-err{font-size:13px;color:var(--red);margin-bottom:14px;padding:10px 14px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;line-height:1.7;}
+.setup-ok{font-size:13px;color:var(--green);margin-bottom:14px;padding:10px 14px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:8px;line-height:1.7;}
+.setup-security{background:rgba(6,182,212,.05);border:1px solid rgba(6,182,212,.15);border-radius:10px;padding:14px 16px;font-size:12px;color:var(--text2);line-height:1.8;}
+.setup-security strong{color:var(--cyan);}
+
+/* ── MOBILE ── */
+@media(max-width:680px){
+  .sidebar{width:58px;min-width:58px;}
+  .sb-icon{font-size:20px;}
+  .sb-lbl{font-size:8px;}
+  .tool-wrap{grid-template-columns:1fr;}
+  .out-panel{position:static;}
+  .home-grid{grid-template-columns:1fr;}
+  .flow-row{grid-template-columns:1fr;}
+  .scroll{padding:14px 12px 40px;}
+  .topbar{padding:0 12px;height:50px;}
+  .topbar-title{font-size:14px;}
+  .topbar-badge{display:none;}
+  .frow{flex-direction:column;gap:0;}
+  .setup-box{padding:24px 18px;}
+  .items-hdr,.item-row{grid-template-columns:2fr .6fr 1fr 36px;}
+  .items-hdr span:nth-child(3),.item-row select{display:none;}
+  .modal-box{margin:0;border-radius:14px;}
+  .home-card{padding:16px 14px;}
+  .hc-desc{display:none;}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef } = React;
+
+const fmt = n => Number(n).toLocaleString('ja-JP');
+let uid = 0;
+const newItem = () => ({ id: ++uid, name: '', qty: 1, unit: '式', unitPrice: 0 });
+const KEY_STORAGE = 'aiworks_api_key_v2';
+const getKey = () => sessionStorage.getItem(KEY_STORAGE) || '';
+const saveKey = k => sessionStorage.setItem(KEY_STORAGE, k);
+
+async function callClaude(apiKey, system, user) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1500,
+      system,
+      messages: [{ role: "user", content: user }]
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const msg = err.error?.message || '';
+    if (res.status === 401) throw new Error('APIキーが正しくありません。もう一度ご確認ください。');
+    if (res.status === 429) throw new Error('利用制限に達しました。しばらく待ってから再試行してください。');
+    throw new Error(msg || `通信エラー（${res.status}）が発生しました。`);
+  }
+  const data = await res.json();
+  return data.content?.find(b => b.type === 'text')?.text || '';
+}
+
+// ── ヘルプモーダル ──────────────────────────────────────────
+function HelpModal({ title, steps, tip, onClose }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <div className="modal-title">💡 {title} の使い方</div>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          {steps.map((s, i) => (
+            <div className="help-step" key={i}>
+              <div className="help-num">{i + 1}</div>
+              <div className="help-content">
+                <div className="help-title">{s.title}</div>
+                <div className="help-desc">{s.desc}</div>
+                {s.example && <div className="help-img">📝 入力例：{s.example}</div>}
+              </div>
+            </div>
+          ))}
+          {tip && <div className="help-tip">💡 {tip}</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── APIキー設定画面 ──────────────────────────────────────────
+function SetupScreen({ onSuccess }) {
+  const [key, setKey] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+  const [step, setStep] = useState(1); // 1=説明, 2=入力
+
+  const handleSubmit = async () => {
+    const k = key.trim();
+    if (!k) { setErr('APIキーを入力してください。'); return; }
+    if (!k.startsWith('sk-ant-')) {
+      setErr('形式が違います。「sk-ant-」で始まるキーをコピーしてください。');
+      return;
+    }
+    setLoading(true); setErr('');
+    try {
+      await callClaude(k, 'respond with ok', 'ok');
+      saveKey(k);
+      onSuccess(k);
+    } catch(e) {
+      setErr(e.message);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="setup-overlay">
+      <div className="setup-wrap">
+        <div className="setup-box">
+          <div className="setup-logo">AI WORKS</div>
+          <div className="setup-sub">現場の書類作業を自動化するAIツール</div>
+
+          {step === 1 && (
+            <>
+              <div className="setup-section-title">🔑 はじめに1回だけ設定が必要です</div>
+              <div className="setup-desc">
+                このツールを動かすには、Anthropic社の「APIキー」という<br/>
+                パスワードのような文字列が必要です。<br/>
+                無料で取得できます。手順通り進めてください。
+              </div>
+
+              <div className="guide-steps">
+                <div className="guide-step">
+                  <div className="guide-step-num">1</div>
+                  <div className="guide-step-body">
+                    <div className="guide-step-title">Anthropicのサイトを開く</div>
+                    <div className="guide-step-desc">下のボタンをタップして、アカウントを作成します（メールアドレスだけでOK）。</div>
+                    <a className="guide-step-link" href="https://console.anthropic.com" target="_blank">→ Anthropicのサイトを開く</a>
+                  </div>
+                </div>
+                <div className="guide-step">
+                  <div className="guide-step-num">2</div>
+                  <div className="guide-step-body">
+                    <div className="guide-step-title">「API Keys」→「Create Key」をタップ</div>
+                    <div className="guide-step-desc">ログイン後、左メニューの「API Keys」を開き、「Create Key」ボタンを押します。</div>
+                  </div>
+                </div>
+                <div className="guide-step">
+                  <div className="guide-step-num">3</div>
+                  <div className="guide-step-body">
+                    <div className="guide-step-title">表示されたキーをコピーする</div>
+                    <div className="guide-step-desc">下のような文字列が表示されます。「コピー」ボタンを押してコピーしてください。</div>
+                    <div className="guide-code">sk-ant-api03-XXXXXXXXXXXXXXXXXXXXXXXX...</div>
+                  </div>
+                </div>
+                <div className="guide-step">
+                  <div className="guide-step-num">4</div>
+                  <div className="guide-step-body">
+                    <div className="guide-step-title">次の画面でキーを貼り付ける</div>
+                    <div className="guide-step-desc">コピーできたら下のボタンを押して、入力欄に貼り付けてください。</div>
+                  </div>
+                </div>
+              </div>
+
+              <button className="setup-btn" onClick={() => setStep(2)}>コピーできました → 次へ</button>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <div className="setup-section-title">📋 APIキーを貼り付けてください</div>
+              <div className="setup-desc" style={{marginBottom:16}}>
+                先ほどコピーした「sk-ant-...」から始まる文字列を下の欄に貼り付けてください。
+              </div>
+              <div className="setup-label">APIキー</div>
+              <input
+                className="setup-input"
+                type="password"
+                placeholder="sk-ant-api03-..."
+                value={key}
+                onChange={e => setKey(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                autoComplete="off"
+              />
+              <div className="setup-input-hint">
+                ※ スマホの場合：入力欄を長押し →「貼り付け」を選ぶと入力できます
+              </div>
+              {err && <div className="setup-err">⚠️ {err}<br/>もう一度キーをコピーして貼り付けてみてください。</div>}
+              <button className="setup-btn" onClick={handleSubmit} disabled={loading || !key.trim()}>
+                {loading ? '⚙️ 確認中です。しばらくお待ちください...' : '✅ 接続して使い始める'}
+              </button>
+              <div style={{marginTop:12,textAlign:'center'}}>
+                <button style={{background:'none',border:'none',color:'var(--text3)',fontSize:13,cursor:'pointer',textDecoration:'underline'}} onClick={() => setStep(1)}>← 手順に戻る</button>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="setup-security">
+          <strong>🔒 セキュリティについて</strong><br/>
+          入力したキーはあなたのブラウザの中だけに保存されます。ブラウザを閉じると自動で消えます。他の人に見られることはありません。
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Toast Hook ───────────────────────────────────────────
+function useToast() {
+  const [toast, setToast] = useState(false);
+  const show = () => { setToast(true); setTimeout(() => setToast(false), 2500); };
+  return [toast, show];
+}
+
+// ═══════════════════════════════════════════════════════════
+// 現場報告 AI
+// ═══════════════════════════════════════════════════════════
+function GenbaReport({ apiKey }) {
+  const [form, setForm] = useState({ date: new Date().toISOString().split('T')[0], site: '', worker: '', weather: '晴れ', workType: '', progress: '', issues: '', next: '' });
+  const [photos, setPhotos] = useState([]);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('待機中');
+  const [toast, showToast] = useToast();
+  const [showHelp, setShowHelp] = useState(false);
+  const fileRef = useRef();
+
+  const sf = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const addPhotos = files => Array.from(files).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const r = new FileReader();
+    r.onload = e => setPhotos(p => [...p, { url: e.target.result }].slice(0, 4));
+    r.readAsDataURL(file);
+  });
+
+  const generate = async () => {
+    if (!form.site || !form.worker || !form.workType) { alert('❗ 現場名・担当者・作業種別を入力してください'); return; }
+    setLoading(true); setStatus('AIが報告書を作成しています...'); setResult(null);
+    const system = `あなたは建設・配管工事の現場監督経験を持つ、プロの報告書作成専門家です。読みやすく信頼性の高い現場日報を作成します。箇条書きは「・」を使い具体的に。安全・品質面は必ず触れる。JSONのみ返す。コードブロック不要。`;
+    const user = `現場日報を作成してください。\n作業日：${form.date} / 現場名：${form.site} / 担当者：${form.worker}\n天気：${form.weather} / 作業種別：${form.workType}\n作業内容：${form.progress||'未記載'}\n問題・特記：${form.issues||'なし'}\n翌日予定：${form.next||'未定'}\n{"summary":"2〜3文","work_detail":"箇条書き3〜5項目","safety":"箇条書き2〜3項目","issues":"問題点と対策","next_plan":"箇条書き2〜3項目","comment":"担当者所見2〜3文"}`;
+    try {
+      const text = await callClaude(apiKey, system, user);
+      let d = {};
+      try { d = JSON.parse(text.trim()); } catch { const m = text.match(/\{[\s\S]*\}/); if (m) try { d = JSON.parse(m[0]); } catch {} }
+      setResult({ ...form, photos: [...photos], ...d });
+      setStatus('完了！コピーして使ってください');
+    } catch(e) { setStatus('エラーが発生しました'); alert('⚠️ ' + e.message); }
+    finally { setLoading(false); }
+  };
+
+  const copy = () => {
+    if (!result) return;
+    navigator.clipboard.writeText([`【現場日報】${result.site}`,`作業日：${result.date}　担当：${result.worker}　天気：${result.weather}`,'',result.summary,'','■ 作業内容',result.work_detail,'','■ 安全・品質管理',result.safety,'','■ 問題点・対策',result.issues,'','■ 明日の作業予定',result.next_plan,'','■ 担当者所見',result.comment].filter(x=>x!==undefined).join('\n'));
+    showToast();
+  };
+
+  const HELP = {
+    title: '現場報告AI',
+    steps: [
+      { title: '基本情報を入力', desc: '作業日・現場名・担当者名・天気・作業種別を選んでください。', example: '現場名「○○ビル3F配管工事」、担当者「田中 太郎」' },
+      { title: '作業内容を入力', desc: '今日やった作業をざっくり入力するだけでOKです。箇条書きでも普通の文章でも構いません。', example: '3Fの給水管配管。約70%完了。' },
+      { title: '「報告書を生成する」を押す', desc: 'AIが自動で読みやすい報告書に整形します。30秒ほどお待ちください。' },
+      { title: 'コピーして貼り付ける', desc: '右の「コピー」ボタンを押すと文章がコピーされます。メールやLINEに貼り付けて使えます。' },
+    ],
+    tip: '写真は最大4枚まで添付できます。任意ですので、なくてもOKです。'
+  };
+
+  return (
+    <div className="tool-wrap">
+      {showHelp && <HelpModal {...HELP} onClose={() => setShowHelp(false)} />}
+      <div>
+        <div style={{display:'flex',justifyContent:'flex-end',marginBottom:10}}>
+          <button className="help-btn" onClick={() => setShowHelp(true)}>💡 使い方を見る</button>
+        </div>
+        <div className="card">
+          <div className="card-head"><div className="card-num">1</div>基本情報</div>
+          <div className="frow">
+            <div className="fg"><div className="flabel">作業日</div><input className="fi" type="date" value={form.date} onChange={e=>sf('date',e.target.value)}/></div>
+            <div className="fg"><div className="flabel">天気</div><select className="fs" value={form.weather} onChange={e=>sf('weather',e.target.value)}>{['晴れ','曇り','雨','雪','晴れのち曇り','曇りのち雨'].map(w=><option key={w}>{w}</option>)}</select></div>
+          </div>
+          <div className="frow">
+            <div className="fg">
+              <div className="flabel">現場名 <span className="req">必須</span></div>
+              <input className="fi" placeholder="例：○○ビル3F配管工事" value={form.site} onChange={e=>sf('site',e.target.value)}/>
+            </div>
+            <div className="fg">
+              <div className="flabel">担当者名 <span className="req">必須</span></div>
+              <input className="fi" placeholder="例：田中 太郎" value={form.worker} onChange={e=>sf('worker',e.target.value)}/>
+            </div>
+          </div>
+          <div className="fg">
+            <div className="flabel">作業種別 <span className="req">必須</span></div>
+            <select className="fs" value={form.workType} onChange={e=>sf('workType',e.target.value)}>
+              <option value="">▼ 選択してください</option>
+              {['給水管工事','排水管工事','ガス管工事','空調ダクト工事','電気配線工事','溶接作業','コンクリート打設','型枠工事','塗装工事','防水工事','その他'].map(t=><option key={t}>{t}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-head"><div className="card-num">2</div>作業内容</div>
+          <div className="fg">
+            <div className="flabel">今日の作業内容</div>
+            <textarea className="fta" rows={3} placeholder="例：3F〜4Fの給水管配管。フロア貫通部の墨出しを実施。約70%完了。&#10;&#10;ざっくりメモ程度でOKです👍" value={form.progress} onChange={e=>sf('progress',e.target.value)}/>
+          </div>
+          <div className="frow">
+            <div className="fg">
+              <div className="flabel">問題・気になった点</div>
+              <textarea className="fta" rows={2} placeholder="例：壁内に既存配管を発見。&#10;問題なければ空欄でもOKです" value={form.issues} onChange={e=>sf('issues',e.target.value)}/>
+            </div>
+            <div className="fg">
+              <div className="flabel">明日の予定</div>
+              <textarea className="fta" rows={2} placeholder="例：残り配管完了後、水圧テスト実施。&#10;未定でも空欄でOKです" value={form.next} onChange={e=>sf('next',e.target.value)}/>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-head"><div className="card-num">3</div>現場写真（任意・最大4枚）</div>
+          <div className="photo-drop" onClick={()=>fileRef.current?.click()}>
+            <input ref={fileRef} type="file" accept="image/*" multiple style={{display:'none'}} onChange={e=>addPhotos(e.target.files)}/>
+            <div className="photo-drop-icon">📸</div>
+            <div className="photo-drop-text">タップして写真を選ぶ</div>
+            <div className="photo-drop-sub">なくてもそのまま生成できます</div>
+          </div>
+          {photos.length > 0 && <div className="photo-grid">{photos.map((p,i)=><div className="photo-thumb" key={i}><img src={p.url} alt=""/><button className="photo-del" onClick={()=>setPhotos(ps=>ps.filter((_,j)=>j!==i))}>×</button></div>)}</div>}
+        </div>
+
+        <button className="btn-gen" onClick={generate} disabled={loading}>
+          {loading ? '⚙️ AIが作成中です。しばらくお待ちください...' : '🤖 報告書を自動作成する'}
+        </button>
+      </div>
+
+      <div className="out-panel">
+        <div className="out-head">
+          <div className="out-title">✦ 生成された報告書</div>
+          {result && <div className="out-acts"><button className="out-btn" onClick={copy}>📋 コピーする</button></div>}
+        </div>
+        <div className="out-body">
+          {!result && !loading && <div className="empty-state"><div className="empty-icon">📋</div><div className="empty-text">左側のフォームを入力して<br/>「自動作成する」ボタンを押してください</div></div>}
+          {loading && <div className="loading-state"><div className="spinner"/><div className="loading-text">AIが報告書を作成しています...<br/><span style={{fontSize:12,color:'var(--text3)'}}>30秒ほどかかります</span></div></div>}
+          {result && !loading && (
+            <>
+              {result.photos?.length > 0 && <div className="out-section"><div className="out-sec-label">現場写真</div><div className="photo-grid">{result.photos.map((p,i)=><img key={i} src={p.url} style={{width:64,height:64,objectFit:'cover',borderRadius:8,border:'1px solid rgba(255,92,0,.2)'}} alt=""/>)}</div></div>}
+              {[['作業概要',result.summary],['本日の作業内容',result.work_detail],['安全・品質管理',result.safety],['問題点・対策',result.issues],['明日の作業予定',result.next_plan],['担当者所見',result.comment]].filter(([,v])=>v).map(([label,val])=>(
+                <div className="out-section" key={label}><div className="out-sec-label">{label}</div><div className="out-text">{val}</div></div>
+              ))}
+            </>
+          )}
+        </div>
+        <div className="status-bar"><div className={`status-dot${loading?' active':''}`}/>{status}</div>
+      </div>
+      <div className={`toast${toast?' show':''}`}>✅ コピーしました！メールやLINEに貼り付けて使えます</div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// 見積もり AI
+// ═══════════════════════════════════════════════════════════
+function Mitsumori({ apiKey }) {
+  const [info, setInfo] = useState({ client: '', myName: '', project: '', note: '' });
+  const [items, setItems] = useState([newItem(), newItem(), newItem()]);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('待機中');
+  const [toast, showToast] = useToast();
+  const [showHelp, setShowHelp] = useState(false);
+
+  const si = (k, v) => setInfo(i => ({ ...i, [k]: v }));
+  const setItem = (id, k, v) => setItems(its => its.map(i => i.id === id ? { ...i, [k]: v } : i));
+  const validItems = items.filter(i => i.name && Number(i.unitPrice) > 0);
+  const subtotal = validItems.reduce((s, i) => s + (Number(i.qty)||0) * (Number(i.unitPrice)||0), 0);
+  const tax = Math.floor(subtotal * 0.1);
+  const total = subtotal + tax;
+
+  const generate = async () => {
+    if (!info.client || !info.project || !validItems.length) { alert('❗ 御見積先・案件名・明細（1行以上）を入力してください'); return; }
+    setLoading(true); setStatus('AIが見積書を作成しています...'); setResult(null);
+    const system = `建設・設備工事業界のプロ見積書作成専門家。案件概要と備考を作成。JSONのみ返す。コードブロック不要。`;
+    const user = `見積書の案件概要と備考を作成してください。\n御見積先：${info.client} / 案件名：${info.project}\n税込合計：¥${fmt(total)}\nメモ：${info.note||'なし'}\n明細：${validItems.map(i=>`${i.name}：${i.qty}${i.unit}×¥${fmt(Number(i.unitPrice))}`).join(', ')}\n{"summary":"案件概要2〜3文","remarks":"備考・補足事項5〜6項目（箇条書き）"}`;
+    try {
+      const text = await callClaude(apiKey, system, user);
+      let d = {};
+      try { d = JSON.parse(text.trim()); } catch { const m = text.match(/\{[\s\S]*\}/); if (m) try { d = JSON.parse(m[0]); } catch {} }
+      setResult({ ...info, items: validItems, subtotal, tax, total, date: new Date().toLocaleDateString('ja-JP'), ...d });
+      setStatus('完了！コピーして使ってください');
+    } catch(e) { setStatus('エラーが発生しました'); alert('⚠️ ' + e.message); }
+    finally { setLoading(false); }
+  };
+
+  const copy = () => {
+    if (!result) return;
+    navigator.clipboard.writeText([`【御見積書】`,`${result.client} 御中`,`発行日：${result.date} / 案件：${result.project}`,'',result.items.map(i=>`${i.name}　${i.qty}${i.unit}　¥${fmt(Number(i.unitPrice))}　¥${fmt((Number(i.qty)||0)*(Number(i.unitPrice)||0))}`).join('\n'),'',`小計：¥${fmt(result.subtotal)}`,`消費税（10%）：¥${fmt(result.tax)}`,`合計（税込）：¥${fmt(result.total)}`,'','【備考】',result.remarks].join('\n'));
+    showToast();
+  };
+
+  const HELP = {
+    title: '見積もりAI',
+    steps: [
+      { title: '基本情報を入力', desc: '御見積先（お客様の社名）と案件名を入力してください。', example: '御見積先「株式会社○○建設」、案件名「3F給排水管改修工事」' },
+      { title: '明細を入力', desc: '品名・数量・単価を入力してください。小計は自動計算されます。行は「＋行を追加」で増やせます。', example: '給水管VP50配管工事　1式　150,000円' },
+      { title: '「見積書を生成する」を押す', desc: 'AIが案件概要と備考（支払条件・保証など）を自動で作成します。' },
+      { title: 'コピーして使う', desc: '「コピーする」ボタンで全文をコピーできます。メールに貼り付けてご利用ください。' },
+    ],
+    tip: '単価を入力すると右側に合計金額と消費税が自動で表示されます。'
+  };
+
+  return (
+    <div className="tool-wrap">
+      {showHelp && <HelpModal {...HELP} onClose={() => setShowHelp(false)} />}
+      <div>
+        <div style={{display:'flex',justifyContent:'flex-end',marginBottom:10}}>
+          <button className="help-btn" onClick={() => setShowHelp(true)}>💡 使い方を見る</button>
+        </div>
+        <div className="card">
+          <div className="card-head"><div className="card-num">1</div>基本情報</div>
+          <div className="frow">
+            <div className="fg">
+              <div className="flabel">御見積先（お客様） <span className="req">必須</span></div>
+              <input className="fi" placeholder="例：株式会社○○建設" value={info.client} onChange={e=>si('client',e.target.value)}/>
+            </div>
+            <div className="fg">
+              <div className="flabel">自社名</div>
+              <input className="fi" placeholder="例：田中配管工業" value={info.myName} onChange={e=>si('myName',e.target.value)}/>
+            </div>
+          </div>
+          <div className="fg">
+            <div className="flabel">案件名・工事名 <span className="req">必須</span></div>
+            <input className="fi" placeholder="例：○○ビル3F 給排水管改修工事" value={info.project} onChange={e=>si('project',e.target.value)}/>
+          </div>
+          <div className="fg">
+            <div className="flabel">特記メモ（任意）</div>
+            <input className="fi" placeholder="例：保証2年、施工期間2週間" value={info.note} onChange={e=>si('note',e.target.value)}/>
+            <div className="fhint">保証・工期・条件など、伝えたいことがあれば入力してください</div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-head"><div className="card-num">2</div>見積明細 <span className="req">必須</span></div>
+          <div className="items-hdr">
+            <span>品名・作業内容</span><span>数量</span><span>単位</span>
+            <span style={{textAlign:'right'}}>単価（円）</span><span></span>
+          </div>
+          {items.map(item => (
+            <div className="item-row" key={item.id}>
+              <input className="ii" placeholder="例：給水管配管工事" value={item.name} onChange={e=>setItem(item.id,'name',e.target.value)}/>
+              <input className="ii ii-r" type="number" min="1" value={item.qty} onChange={e=>setItem(item.id,'qty',e.target.value)}/>
+              <select className="ii" value={item.unit} onChange={e=>setItem(item.id,'unit',e.target.value)}>
+                {['式','m','本','個','枚','台','人工','㎡','箇所'].map(u=><option key={u}>{u}</option>)}
+              </select>
+              <input className="ii ii-r" type="number" min="0" placeholder="0" value={item.unitPrice||''} onChange={e=>setItem(item.id,'unitPrice',e.target.value)}/>
+              <button className="ii-del" onClick={()=>setItems(its=>its.filter(i=>i.id!==item.id))}>🗑</button>
+            </div>
+          ))}
+          <button className="add-item" onClick={()=>setItems(its=>[...its,newItem()])}>＋ 行を追加する</button>
+          <div className="subtotal">
+            <div className="st-row"><span>小計</span><span>¥{fmt(subtotal)}</span></div>
+            <div className="st-row"><span>消費税 10%</span><span>¥{fmt(tax)}</span></div>
+            <div className="st-row total-row"><span>合計（税込）</span><span>¥{fmt(total)}</span></div>
+          </div>
+        </div>
+
+        <button className="btn-gen" onClick={generate} disabled={loading}>
+          {loading ? '⚙️ AIが作成中です。しばらくお待ちください...' : '🤖 見積書を自動作成する'}
+        </button>
+      </div>
+
+      <div className="out-panel">
+        <div className="out-head">
+          <div className="out-title">✦ 生成された見積書</div>
+          {result && <div className="out-acts"><button className="out-btn" onClick={copy}>📋 コピーする</button></div>}
+        </div>
+        <div className="out-body">
+          {!result && !loading && <div className="empty-state"><div className="empty-icon">💴</div><div className="empty-text">明細を入力して<br/>「自動作成する」ボタンを押してください</div></div>}
+          {loading && <div className="loading-state"><div className="spinner"/><div className="loading-text">AIが見積書を作成しています...<br/><span style={{fontSize:12,color:'var(--text3)'}}>30秒ほどかかります</span></div></div>}
+          {result && !loading && (
+            <>
+              <div className="out-section">
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:12}}>
+                  <div><div style={{fontSize:17,fontWeight:900,color:'var(--gold)',marginBottom:2}}>{result.myName||'御社'}</div><div style={{fontSize:12,color:'var(--text2)'}}>御見積書　発行日：{result.date}</div></div>
+                  <div style={{textAlign:'right',fontSize:12,color:'var(--text2)'}}>{result.client} 御中</div>
+                </div>
+                <div style={{fontSize:15,fontWeight:900,color:'var(--text)',marginBottom:6}}>📋 {result.project}</div>
+                {result.summary && <div className="out-text">{result.summary}</div>}
+              </div>
+              <div className="out-section">
+                <div className="out-sec-label">見積明細</div>
+                <table className="qt">
+                  <thead><tr><th>品名</th><th>数量</th><th>単位</th><th className="r">単価</th><th className="r">金額</th></tr></thead>
+                  <tbody>{result.items.map((item,i)=><tr key={i}><td>{item.name}</td><td>{item.qty}</td><td>{item.unit}</td><td className="r">¥{fmt(Number(item.unitPrice))}</td><td className="r">¥{fmt((Number(item.qty)||0)*(Number(item.unitPrice)||0))}</td></tr>)}</tbody>
+                </table>
+                <div className="qt-total">
+                  <div className="qt-row"><span>小計</span><span>¥{fmt(result.subtotal)}</span></div>
+                  <div className="qt-row"><span>消費税（10%）</span><span>¥{fmt(result.tax)}</span></div>
+                  <div className="qt-row final"><span>御見積合計</span><span>¥{fmt(result.total)}</span></div>
+                </div>
+              </div>
+              {result.remarks && <div className="out-section"><div className="out-sec-label">備考・補足事項</div><div className="out-text">{result.remarks}</div></div>}
+            </>
+          )}
+        </div>
+        <div className="status-bar"><div className={`status-dot${loading?' active':''}`}/>{status}</div>
+      </div>
+      <div className={`toast${toast?' show':''}`}>✅ コピーしました！メールやLINEに貼り付けて使えます</div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// 議事録 AI
+// ═══════════════════════════════════════════════════════════
+function Gijiroku({ apiKey }) {
+  const [info, setInfo] = useState({ title: '', date: new Date().toISOString().split('T')[0], location: '' });
+  const [participants, setParticipants] = useState([]);
+  const [pInput, setPInput] = useState('');
+  const [mode, setMode] = useState('text');
+  const [rawText, setRawText] = useState('');
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('待機中');
+  const [toast, showToast] = useToast();
+  const [showHelp, setShowHelp] = useState(false);
+
+  const si = (k, v) => setInfo(i => ({ ...i, [k]: v }));
+  const addP = e => {
+    if ((e.key === 'Enter' || e.key === ',') && pInput.trim()) {
+      e.preventDefault();
+      setParticipants(p => [...p, pInput.trim()]);
+      setPInput('');
+    }
+  };
+
+  const generate = async () => {
+    if (!info.title || !rawText.trim()) { alert('❗ 会議名と会議内容を入力してください'); return; }
+    setLoading(true); setStatus('AIが議事録を作成しています...'); setResult(null);
+    const system = `会議ファシリテーションと議事録作成の専門家。乱雑なメモから構造化された議事録を作成する。JSONのみ返す。コードブロック不要。`;
+    const user = `議事録を作成してください。\n会議名：${info.title} / 日時：${info.date} / 場所：${info.location||'未記載'} / 参加者：${participants.join('、')||'未記載'}\n内容：${rawText}\n{"summary":"概要2〜3文","agenda":"議題・討議（箇条書き3〜6項目）","decisions":"決定事項（箇条書き2〜5項目）","actions":[{"task":"タスク","owner":"担当者","deadline":"期限"}],"next_meeting":"次回会議（なければ空文字）"}`;
+    try {
+      const text = await callClaude(apiKey, system, user);
+      let d = {};
+      try { d = JSON.parse(text.trim()); } catch { const m = text.match(/\{[\s\S]*\}/); if (m) try { d = JSON.parse(m[0]); } catch {} }
+      setResult({ ...info, participants: [...participants], ...d });
+      setStatus('完了！コピーして使ってください');
+    } catch(e) { setStatus('エラーが発生しました'); alert('⚠️ ' + e.message); }
+    finally { setLoading(false); }
+  };
+
+  const copy = () => {
+    if (!result) return;
+    const actions = (result.actions||[]).map(a=>`・${a.task}　担当：${a.owner}　期限：${a.deadline}`).join('\n');
+    navigator.clipboard.writeText([`【議事録】${result.title}`,`日時：${result.date}　場所：${result.location||'－'}`,`参加者：${result.participants.join('、')||'－'}`,'','■ 会議概要',result.summary,'','■ 議題・討議内容',result.agenda,'','■ 決定事項',result.decisions,'','■ アクションアイテム',actions,...(result.next_meeting?['','■ 次回会議',result.next_meeting]:[])].join('\n'));
+    showToast();
+  };
+
+  const HELP = {
+    title: '議事録AI',
+    steps: [
+      { title: '会議名と日付を入力', desc: '何の会議かわかる名前と、開催日を入力してください。', example: '「週次定例MTG」「現場打ち合わせ」' },
+      { title: '参加者を入力（任意）', desc: '名前を入力してEnterキーを押すと追加できます。スマホの場合は改行ボタンを押してください。' },
+      { title: '会議の内容を入力', desc: '話し合った内容をそのまま入力してください。箇条書きでも文章でも、メモのままでもOKです。', example: '・新案件の進捗報告あり\n・来週の現場立会いは木曜に決定\n・見積り再提出は15日まで' },
+      { title: '「議事録を生成する」を押す', desc: 'AIが決定事項・アクションアイテムなどを自動で整理します。' },
+    ],
+    tip: '音声文字起こしアプリ（iPhoneのメモ帳など）で録音したテキストをそのまま貼り付けることもできます。'
+  };
+
+  return (
+    <div className="tool-wrap">
+      {showHelp && <HelpModal {...HELP} onClose={() => setShowHelp(false)} />}
+      <div>
+        <div style={{display:'flex',justifyContent:'flex-end',marginBottom:10}}>
+          <button className="help-btn" onClick={() => setShowHelp(true)}>💡 使い方を見る</button>
+        </div>
+        <div className="card">
+          <div className="card-head"><div className="card-num">1</div>会議情報</div>
+          <div className="fg">
+            <div className="flabel">会議名 <span className="req">必須</span></div>
+            <input className="fi" placeholder="例：週次定例MTG / 現場打ち合わせ" value={info.title} onChange={e=>si('title',e.target.value)}/>
+          </div>
+          <div className="frow">
+            <div className="fg"><div className="flabel">日時</div><input className="fi" type="date" value={info.date} onChange={e=>si('date',e.target.value)}/></div>
+            <div className="fg"><div className="flabel">場所・形式</div><input className="fi" placeholder="例：会議室A / Zoom" value={info.location} onChange={e=>si('location',e.target.value)}/></div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-head"><div className="card-num">2</div>参加者（任意）</div>
+          <div className="tag-wrap">
+            {participants.map((p,i)=><div className="tag" key={i}>{p}<button className="tag-x" onClick={()=>setParticipants(ps=>ps.filter((_,j)=>j!==i))}>×</button></div>)}
+            <input className="tag-input" placeholder="名前を入力 → Enterで追加" value={pInput} onChange={e=>setPInput(e.target.value)} onKeyDown={addP}/>
+          </div>
+          <div className="fhint" style={{marginTop:8}}>入力してEnterキーを押すと追加されます。スキップしてもOKです。</div>
+        </div>
+
+        <div className="card">
+          <div className="card-head"><div className="card-num">3</div>会議の内容 <span className="req">必須</span></div>
+          <div className="mode-tabs">
+            <button className={`mode-tab${mode==='text'?' active':''}`} onClick={()=>setMode('text')}>✏️ 自分で入力する</button>
+            <button className={`mode-tab${mode==='voice'?' active':''}`} onClick={()=>setMode('voice')}>🎙️ 文字起こしを貼り付ける</button>
+          </div>
+          <textarea className="fta" rows={9}
+            placeholder={mode==='text'
+              ? '会議で話した内容を、メモのままで入力してください。\nきれいな文章じゃなくてOKです👍\n\n例：\n・新案件の進捗：田中さんから図面変更の報告\n・来週の現場立会いは木曜に決定\n・見積再提出は鈴木さんが15日までに対応\n・次回は来週月曜10時'
+              : '音声文字起こしのテキストをここに貼り付けてください。\n\niPhoneのメモアプリ → マイクボタン → 話す → テキストをコピー → ここに貼り付けでOKです。'}
+            value={rawText} onChange={e=>setRawText(e.target.value)}/>
+        </div>
+
+        <button className="btn-gen" onClick={generate} disabled={loading}>
+          {loading ? '⚙️ AIが作成中です。しばらくお待ちください...' : '🤖 議事録を自動作成する'}
+        </button>
+      </div>
+
+      <div className="out-panel">
+        <div className="out-head">
+          <div className="out-title">✦ 生成された議事録</div>
+          {result && <div className="out-acts"><button className="out-btn" onClick={copy}>📋 コピーする</button></div>}
+        </div>
+        <div className="out-body">
+          {!result && !loading && <div className="empty-state"><div className="empty-icon">📝</div><div className="empty-text">会議の内容を入力して<br/>「自動作成する」ボタンを押してください</div></div>}
+          {loading && <div className="loading-state"><div className="spinner"/><div className="loading-text">AIが議事録を作成しています...<br/><span style={{fontSize:12,color:'var(--text3)'}}>30秒ほどかかります</span></div></div>}
+          {result && !loading && (
+            <>
+              <div className="out-section">
+                <div style={{background:'rgba(6,182,212,.06)',border:'1px solid rgba(6,182,212,.15)',borderRadius:10,padding:'14px 16px'}}>
+                  <div style={{fontSize:16,fontWeight:900,color:'var(--cyan)',marginBottom:6}}>{result.title}</div>
+                  <div style={{fontSize:12,color:'var(--text2)',lineHeight:1.9}}>
+                    📅 {result.date}{result.location?` 　📍 ${result.location}`:''}
+                    {result.participants?.length>0&&<><br/>👥 {result.participants.join('、')}</>}
+                  </div>
+                </div>
+              </div>
+              {result.summary&&<div className="out-section"><div className="out-sec-label">会議概要</div><div className="out-text">{result.summary}</div></div>}
+              {result.agenda&&<div className="out-section"><div className="out-sec-label">議題・討議内容</div><div className="out-text">{result.agenda}</div></div>}
+              {result.decisions&&<div className="out-section"><div className="out-sec-label">決定事項</div><div className="out-text">{result.decisions}</div></div>}
+              {result.actions?.length>0&&(
+                <div className="out-section">
+                  <div className="out-sec-label">アクションアイテム</div>
+                  <div className="action-list">
+                    {result.actions.map((a,i)=>(
+                      <div className="action-item" key={i}>
+                        <div className="a-dot"/>
+                        <div className="a-body">
+                          <div className="a-task">{a.task}</div>
+                          <div className="a-meta">{a.owner&&`担当：${a.owner}`}{a.owner&&a.deadline&&'　'}{a.deadline&&`期限：${a.deadline}`}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {result.next_meeting&&<div className="out-section"><div className="out-sec-label">次回会議</div><div className="out-text">{result.next_meeting}</div></div>}
+            </>
+          )}
+        </div>
+        <div className="status-bar"><div className={`status-dot${loading?' active':''}`}/>{status}</div>
+      </div>
+      <div className={`toast${toast?' show':''}`}>✅ コピーしました！メールやLINEに貼り付けて使えます</div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// HOME
+// ═══════════════════════════════════════════════════════════
+function Home({ onNav }) {
+  return (
+    <div>
+      <div style={{marginBottom:24}}>
+        <div style={{fontSize:22,fontWeight:900,marginBottom:5}}>ダッシュボード</div>
+        <div style={{fontSize:14,color:'var(--text2)',lineHeight:1.7}}>3つのAIツールで現場の書類作業を自動化します。<br/>使いたいツールをタップしてください。</div>
+      </div>
+
+      <div style={{fontSize:10,color:'var(--text3)',letterSpacing:3,textTransform:'uppercase',marginBottom:12}}>AIツール</div>
+      <div className="home-grid">
+        {[
+          { key:'report', icon:'📋', name:'現場報告AI', desc:'作業内容を入力するだけで、プロ品質の現場日報を自動作成。毎日の報告書が5分で完成。', color:'orange' },
+          { key:'quote',  icon:'💰', name:'見積もりAI', desc:'品名と単価を入力するだけ。案件概要・備考付きの見積書を即作成。', color:'gold' },
+          { key:'minutes',icon:'📝', name:'議事録AI',   desc:'会議メモを貼るだけで、決定事項・アクションアイテムを自動整理。', color:'cyan' },
+        ].map(t=>(
+          <div className={`home-card ${t.color}`} key={t.key} onClick={()=>onNav(t.key)}>
+            <div className="hc-icon">{t.icon}</div>
+            <div className="hc-name">{t.name}</div>
+            <div className="hc-desc">{t.desc}</div>
+            <div className="hc-arrow">→</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{fontSize:10,color:'var(--text3)',letterSpacing:3,textTransform:'uppercase',marginBottom:12}}>使い方（3ステップ）</div>
+      <div className="flow-row">
+        {[
+          { n:'1', title:'情報を入力する', desc:'フォームに必要な情報を入力します。難しい項目はありません。' },
+          { n:'2', title:'ボタンを押すだけ', desc:'「自動作成する」ボタンを1回押すだけでAIが文書を作ります。' },
+          { n:'3', title:'コピーして完成', desc:'「コピーする」ボタンでテキストをコピー。メールやLINEに貼り付ければ完成！' },
+        ].map(s=>(
+          <div className="flow-card" key={s.n}>
+            <div className="flow-n">{s.n}</div>
+            <div className="flow-text"><strong>{s.title}</strong>{s.desc}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{background:'rgba(255,92,0,.06)',border:'1px solid rgba(255,92,0,.15)',borderRadius:12,padding:18}}>
+        <div style={{fontSize:13,fontWeight:900,color:'var(--orange)',marginBottom:6}}>💡 AI導入パックについて</div>
+        <div style={{fontSize:13,color:'var(--text2)',lineHeight:1.9}}>
+          このダッシュボードは「AI導入パック 500,000円」に含まれる3つのAIツールです。<br/>
+          「AIサポート 月額50,000円」でアップデート・改善・サポートを継続提供します。
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// APP
+// ═══════════════════════════════════════════════════════════
+const NAVS = [
+  { key:'home',    icon:'🏠', label:'ホーム' },
+  { key:'report',  icon:'📋', label:'日報' },
+  { key:'quote',   icon:'💰', label:'見積' },
+  { key:'minutes', icon:'📝', label:'議事録' },
+];
+const TITLES = { home:'AI WORKS', report:'現場報告AI', quote:'見積もりAI', minutes:'議事録AI' };
+
+export default function App() {
+  const [apiKey, setApiKey] = useState(getKey);
+  const [page, setPage] = useState('home');
+
+  if (!apiKey) return <SetupScreen onSuccess={setApiKey} />;
+
+  return (
+    <div className="shell">
+      <aside className="sidebar">
+        <div className="sb-logo"><div className="sb-wordmark">AI<br/>WORKS</div></div>
+        <nav className="sb-nav">
+          {NAVS.map(n=>(
+            <div key={n.key} className={`sb-item${page===n.key?' active':''}`} onClick={()=>setPage(n.key)}>
+              <span className="sb-icon">{n.icon}</span>
+              <span className="sb-lbl">{n.label}</span>
+            </div>
+          ))}
+        </nav>
+        <div className="sb-foot">
+          <div className="pulse-dot"/>
+          <span className="sb-foot-lbl">AI<br/>接続中</span>
+        </div>
+      </aside>
+
+      <div className="content">
+        <div className="topbar">
+          <div className="topbar-title">{TITLES[page]}</div>
+          <div className="topbar-right">
+            <button className="key-btn" onClick={()=>{sessionStorage.removeItem(KEY_STORAGE);setApiKey('');}}>🔑 キー変更</button>
+            <div className="topbar-badge">AI POWERED</div>
+          </div>
+        </div>
+        <div className="scroll">
+          {page==='home'    && <Home onNav={setPage}/>}
+          {page==='report'  && <GenbaReport apiKey={apiKey}/>}
+          {page==='quote'   && <Mitsumori apiKey={apiKey}/>}
+          {page==='minutes' && <Gijiroku apiKey={apiKey}/>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
