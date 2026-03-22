@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/AI_WORKS_v2_easy_1.html" }
+  ]
+}
