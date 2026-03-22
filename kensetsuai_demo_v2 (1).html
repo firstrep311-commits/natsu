@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KensetsuAI — デモ v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Oswald:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --dark:#1A2745; --mid:#2C3E6B; --accent:#F07A1A;
+  --green:#0D9488; --light:#F4F6FA; --white:#FFFFFF;
+  --gray:#64748B; --red:#DC2626; --border:#E2E8F0;
+  --gold:#F0B429; --cyan:#06B6D4;
+  --shadow:0 4px 24px rgba(26,39,69,0.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--light);color:var(--dark);min-height:100vh;}
+
+/* NAV */
+.topnav{background:var(--dark);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--accent);}
+.topnav-logo{font-family:'Oswald',sans-serif;font-size:20px;color:var(--white);letter-spacing:1px;white-space:nowrap;}
+.topnav-logo span{color:var(--accent);}
+.topnav-tabs{display:flex;gap:2px;overflow-x:auto;}
+.tab-btn{background:none;border:none;color:rgba(255,255,255,0.5);font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;padding:5px 12px;border-radius:4px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.tab-btn:hover{background:rgba(255,255,255,.08);color:var(--white);}
+.tab-btn.active{background:var(--accent);color:var(--white);}
+.topnav-badge{font-size:11px;color:var(--accent);border:1px solid var(--accent);padding:2px 10px;border-radius:20px;font-weight:700;white-space:nowrap;}
+
+/* PANELS */
+.panel{display:none;padding:28px;}
+.panel.active{display:block;}
+
+/* SECTION HEADER */
+.sec-header{display:flex;align-items:flex-end;gap:16px;margin-bottom:24px;border-left:4px solid var(--accent);padding-left:16px;}
+.sec-header h2{font-size:20px;font-weight:900;color:var(--dark);line-height:1.2;}
+.sec-header p{font-size:12px;color:var(--gray);margin-bottom:2px;}
+
+/* CARDS */
+.card{background:var(--white);border-radius:10px;box-shadow:var(--shadow);padding:22px;}
+
+/* GRIDS */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+
+/* FORM */
+label{display:block;font-size:11px;font-weight:700;color:var(--gray);margin-bottom:4px;letter-spacing:.5px;}
+input[type=text],input[type=date],input[type=number],select,textarea{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 11px;font-family:'Noto Sans JP',sans-serif;font-size:13px;color:var(--dark);background:var(--white);transition:border-color .2s;outline:none;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+.field{margin-bottom:14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:6px;font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .2s;}
+.btn-primary{background:var(--accent);color:var(--white);}
+.btn-primary:hover{background:#d9680f;transform:translateY(-1px);}
+.btn-dark{background:var(--dark);color:var(--white);}
+.btn-green{background:var(--green);color:var(--white);}
+.btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--gray);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm{padding:6px 13px;font-size:12px;}
+.btn-full{width:100%;justify-content:center;font-size:15px;padding:13px;}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-green{background:#D1FAE5;color:#065F46;}
+.badge-orange{background:#FEF3C7;color:#92400E;}
+.badge-red{background:#FEE2E2;color:#991B1B;}
+.badge-blue{background:#DBEAFE;color:#1E40AF;}
+.badge-gray{background:var(--border);color:var(--gray);}
+
+/* STAT BOX */
+.stat-box{background:var(--white);border-radius:10px;padding:18px;box-shadow:var(--shadow);border-top:3px solid var(--accent);}
+.stat-box.green{border-color:var(--green);}
+.stat-box.mid{border-color:var(--mid);}
+.stat-box.red{border-color:var(--red);}
+.stat-label{font-size:11px;color:var(--gray);font-weight:700;letter-spacing:.5px;margin-bottom:5px;}
+.stat-value{font-family:'Oswald',sans-serif;font-size:26px;color:var(--dark);}
+.stat-value.accent{color:var(--accent);}
+.stat-value.green{color:var(--green);}
+.stat-value.red{color:var(--red);}
+.stat-sub{font-size:11px;color:var(--gray);margin-top:3px;}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:13px;}
+.data-table th{background:var(--dark);color:var(--white);padding:9px 13px;text-align:left;font-weight:700;font-size:12px;}
+.data-table td{padding:10px 13px;border-bottom:1px solid var(--border);color:var(--dark);}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:#f8fafc;}
+
+/* PROGRESS */
+.progress-track{background:var(--border);border-radius:4px;height:7px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:4px;background:var(--green);transition:width .8s ease;}
+.progress-fill.orange{background:var(--accent);}
+
+/* RESULT BOX */
+.result-box{background:var(--dark);border-radius:10px;padding:22px;color:var(--white);margin-top:18px;position:relative;overflow:hidden;}
+.result-box::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--accent);}
+.result-line{margin-bottom:9px;font-size:13px;line-height:1.8;}
+.result-line strong{color:var(--accent);}
+
+/* ALERT */
+.alert{display:flex;align-items:flex-start;gap:11px;padding:12px 16px;border-radius:8px;margin-bottom:14px;font-size:13px;line-height:1.6;}
+.alert-warn{background:#FEF3C7;border-left:3px solid #F59E0B;color:#78350F;}
+.alert-ok{background:#D1FAE5;border-left:3px solid var(--green);color:#065F46;}
+.alert-err{background:#FEE2E2;border-left:3px solid var(--red);color:#991B1B;}
+.alert-icon{font-size:17px;flex-shrink:0;margin-top:1px;}
+
+/* CHART */
+.chart-wrap{display:flex;align-items:flex-end;gap:8px;height:140px;padding:0 6px;}
+.chart-col{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;}
+.chart-bar{width:100%;border-radius:4px 4px 0 0;background:var(--mid);transition:all .6s ease;}
+.chart-bar.accent{background:var(--accent);}
+.chart-bar.green{background:var(--green);}
+.chart-val{font-size:10px;font-weight:700;color:var(--dark);}
+.chart-axis{border-top:1.5px solid var(--border);margin:0 6px;}
+
+/* STEP INDICATOR */
+.steps{display:flex;margin-bottom:22px;}
+.step{flex:1;text-align:center;padding:9px 6px;font-size:12px;font-weight:700;color:var(--gray);border-bottom:2px solid var(--border);}
+.step.active{color:var(--accent);border-color:var(--accent);}
+.step.done{color:var(--green);border-color:var(--green);}
+
+/* DIVIDER */
+.divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
+
+/* AI OVERLAY */
+.ai-overlay{display:none;position:fixed;inset:0;background:rgba(26,39,69,.72);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+.ai-overlay.show{display:flex;}
+.ai-overlay-box{background:var(--white);border-radius:12px;padding:30px 44px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.ai-dots span{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--accent);margin:0 3px;animation:bounce .8s ease infinite;}
+.ai-dots span:nth-child(2){animation-delay:.15s;}
+.ai-dots span:nth-child(3){animation-delay:.3s;}
+@keyframes bounce{0%,80%,100%{transform:scale(.6);opacity:.5;}40%{transform:scale(1);opacity:1;}}
+
+/* SPINNER */
+@keyframes spin{to{transform:rotate(360deg);}}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:var(--white);padding:8px 20px;border-radius:20px;font-weight:700;font-size:12px;transition:transform .25s;z-index:9999;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* WORKSPACE */
+.ws-shell{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
+.ws-card{background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:18px;margin-bottom:13px;}
+.ws-card-head{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:7px;margin-bottom:14px;}
+.ws-card-num{width:17px;height:17px;border-radius:50%;background:var(--accent);color:#fff;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ws-fi,.ws-fs,.ws-fta{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 10px;font-family:'Noto Sans JP',sans-serif;font-size:12px;color:var(--dark);outline:none;transition:border-color .15s;}
+.ws-fi:focus,.ws-fs:focus,.ws-fta:focus{border-color:var(--accent);}
+.ws-fta{resize:vertical;min-height:65px;line-height:1.8;}
+.ws-frow{display:flex;gap:9px;}
+.ws-frow .ws-fg{flex:1;}
+.ws-fg{margin-bottom:11px;}
+.ws-flabel{font-size:11px;font-weight:700;color:var(--gray);margin-bottom:4px;display:flex;align-items:center;gap:5px;}
+.ws-req{font-size:8px;background:var(--accent);color:#fff;padding:1px 4px;border-radius:3px;font-weight:900;}
+.btn-gen{width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,var(--accent),#FF8C42);color:#fff;font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:900;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 4px 14px rgba(240,122,26,.25);}
+.btn-gen:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 22px rgba(240,122,26,.35);}
+.btn-gen:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
+.out-panel{background:#0A0F1E;border:1px solid rgba(255,255,255,.08);border-radius:10px;overflow:hidden;position:sticky;top:10px;}
+.out-head{padding:12px 16px;background:#111827;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;}
+.out-title{font-size:10px;font-weight:700;color:var(--green);letter-spacing:2px;text-transform:uppercase;}
+.out-btn{background:rgba(13,148,136,.1);border:1px solid rgba(13,148,136,.25);border-radius:5px;padding:4px 9px;color:var(--green);font-size:10px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;}
+.out-btn:hover{background:rgba(13,148,136,.2);}
+.out-body{padding:18px;min-height:260px;max-height:70vh;overflow-y:auto;}
+.out-body::-webkit-scrollbar{width:3px;}
+.out-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);}
+.out-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:240px;color:rgba(255,255,255,.2);gap:8px;text-align:center;}
+.out-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:240px;gap:12px;}
+.out-spinner{width:32px;height:32px;border:3px solid rgba(240,122,26,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+.out-section{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.04);}
+.out-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.out-sec-label{font-size:9px;font-weight:700;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.out-text{font-size:12px;line-height:1.9;color:rgba(241,245,249,.82);white-space:pre-wrap;}
+.out-status{padding:8px 16px;background:rgba(10,15,30,.6);border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,.4);}
+.status-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2.5s ease infinite;}
+.status-dot.active{background:var(--accent);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* DOC TYPE BTNS */
+.doc-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.doc-type-btn{padding:10px 8px;border-radius:8px;cursor:pointer;border:1.5px solid var(--border);background:var(--light);transition:all .15s;text-align:center;}
+.doc-type-btn:hover{border-color:var(--accent);}
+.doc-type-btn.selected{border-color:var(--accent);background:rgba(240,122,26,.08);}
+.dt-icon{font-size:20px;margin-bottom:3px;}
+.dt-name{font-size:11px;font-weight:700;color:var(--dark);margin-bottom:1px;}
+.dt-name.sel{color:var(--accent);}
+.dt-desc{font-size:9px;color:var(--gray);}
+
+/* SAFETY CHECK */
+.check-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.check-item{display:flex;align-items:center;gap:7px;padding:7px 9px;background:var(--light);border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:all .15s;}
+.check-item:hover{border-color:var(--accent);}
+.check-item.checked{background:#D1FAE5;border-color:#6EE7B7;}
+.check-box{width:15px;height:15px;border-radius:3px;border:1.5px solid var(--gray);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;}
+.check-item.checked .check-box{background:var(--green);border-color:var(--green);color:#fff;}
+.check-label{font-size:11px;color:var(--gray);}
+.check-item.checked .check-label{color:var(--dark);}
+
+/* ITEMS TABLE (見積) */
+.items-hdr{display:grid;grid-template-columns:2.5fr .6fr .6fr 1.1fr 28px;gap:5px;padding:5px 7px;background:rgba(240,122,26,.07);border-radius:5px;font-size:10px;color:var(--gray);margin-bottom:4px;}
+.item-row{display:grid;grid-template-columns:2.5fr .6fr .6fr 1.1fr 28px;gap:5px;padding:3px 0;border-bottom:1px solid var(--border);align-items:center;}
+.ii{border:1px solid var(--border);border-radius:5px;padding:5px 7px;width:100%;font-family:'Noto Sans JP',sans-serif;font-size:11px;color:var(--dark);outline:none;}
+.ii:focus{border-color:var(--accent);}
+.ii-r{text-align:right;}
+.ii-del{background:none;border:none;cursor:pointer;color:var(--gray);font-size:13px;}
+.ii-del:hover{color:var(--red);}
+.add-row{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:7px;width:100%;padding:7px;background:none;border:1px dashed rgba(240,122,26,.25);border-radius:7px;cursor:pointer;color:var(--gray);font-size:12px;font-family:'Noto Sans JP',sans-serif;transition:all .15s;}
+.add-row:hover{border-color:var(--accent);color:var(--accent);}
+.subtotal{margin-top:10px;padding:10px;background:var(--light);border-radius:7px;}
+.st-row{display:flex;justify-content:space-between;font-size:12px;color:var(--gray);margin-bottom:3px;}
+.st-row.total{font-size:15px;font-weight:900;color:var(--dark);border-top:1px solid var(--border);padding-top:6px;margin-top:3px;}
+
+/* TAG INPUT (議事録 参加者) */
+.tag-wrap{display:flex;flex-wrap:wrap;gap:5px;min-height:38px;border:1.5px solid var(--border);border-radius:6px;padding:6px 9px;transition:border-color .2s;}
+.tag-wrap:focus-within{border-color:var(--accent);}
+.tag{background:#DBEAFE;border-radius:12px;padding:2px 8px;font-size:11px;color:#1E40AF;display:flex;align-items:center;gap:3px;}
+.tag-x{background:none;border:none;color:#1E40AF;cursor:pointer;font-size:11px;opacity:.6;}
+.tag-x:hover{opacity:1;}
+.tag-input{background:none;border:none;outline:none;font-family:'Noto Sans JP',sans-serif;font-size:12px;color:var(--dark);flex:1;min-width:80px;}
+
+/* ACTION ITEMS */
+.action-list{display:flex;flex-direction:column;gap:6px;}
+.action-item{background:rgba(13,148,136,.06);border:1px solid rgba(13,148,136,.18);border-radius:6px;padding:8px 11px;display:flex;gap:8px;}
+.a-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:5px;}
+.a-task{font-size:12px;color:rgba(241,245,249,.88);line-height:1.5;}
+.a-meta{font-size:10px;color:var(--green);margin-top:2px;}
+</style>
+</head>
+<body>
+
+<!-- AI Overlay -->
+<div class="ai-overlay" id="aiOverlay">
+  <div class="ai-overlay-box">
+    <div class="ai-dots"><span></span><span></span><span></span></div>
+    <p style="margin-top:14px;font-weight:700;color:var(--dark);font-size:15px;" id="aiMsg">処理中...</p>
+    <p style="font-size:11px;color:var(--gray);margin-top:5px;">しばらくお待ちください</p>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">✅ クリップボードにコピーしました</div>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <div class="topnav-logo">Kensetsu<span>AI</span></div>
+  <div class="topnav-tabs">
+    <button class="tab-btn active" onclick="showPanel('green',this)">📋 グリーンファイル</button>
+    <button class="tab-btn" onclick="showPanel('invoice',this)">🧾 インボイス管理</button>
+    <button class="tab-btn" onclick="showPanel('dashboard',this)">📊 施工実績</button>
+    <button class="tab-btn" onclick="showPanel('report',this)">📝 現場報告AI</button>
+    <button class="tab-btn" onclick="showPanel('quote',this)">💰 見積もりAI</button>
+    <button class="tab-btn" onclick="showPanel('minutes',this)">🗒 議事録AI</button>
+  </div>
+  <div class="topnav-badge">龍輝工業様 デモ</div>
+</nav>
+
+<!-- ====================================================
+     PANEL 1: グリーンファイル自動生成
+     ==================================================== -->
+<div class="panel active" id="panel-green">
+  <div class="sec-header">
+    <div>
+      <p>機能 01</p>
+      <h2>グリーンファイル自動生成AI</h2>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:10px;align-items:center;">
+      <span style="font-size:12px;color:var(--gray);">作業時間</span>
+      <span style="font-family:'Oswald';font-size:20px;color:var(--red);text-decoration:line-through;">約2時間</span>
+      <span style="font-family:'Oswald';font-size:26px;color:var(--green);font-weight:700;">→ 15分</span>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step done" id="gs1">① 現場情報</div>
+    <div class="step active" id="gs2">② 作業員選択</div>
+    <div class="step" id="gs3">③ 書類生成</div>
+    <div class="step" id="gs4">④ 出力</div>
+  </div>
+  <div class="grid2" style="gap:22px;">
+    <div>
+      <div class="card" style="margin-bottom:14px;">
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;">📍 現場情報</h3>
+        <div class="form-row">
+          <div class="field"><label>現場名</label><input type="text" id="g-site" value="大阪市北区　○○ビル給排水工事"></div>
+          <div class="field"><label>元請会社</label><input type="text" id="g-moto" value="株式会社大阪建設"></div>
+        </div>
+        <div class="form-row">
+          <div class="field"><label>着工日</label><input type="date" id="g-start" value="2026-04-01"></div>
+          <div class="field"><label>竣工予定日</label><input type="date" id="g-end" value="2026-06-30"></div>
+        </div>
+        <div class="field"><label>工事内容</label><input type="text" id="g-work" value="給排水衛生設備工事・空調配管工事"></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:13px;">👷 作業員選択（クリックで追加）</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;" id="worker-pool"></div>
+        <hr class="divider">
+        <p style="font-size:11px;color:var(--gray);font-weight:700;margin-bottom:8px;">選択中の作業員</p>
+        <div id="selected-workers" style="min-height:40px;display:flex;flex-wrap:wrap;gap:7px;">
+          <span style="color:var(--gray);font-size:12px;" id="no-worker-msg">作業員を選択してください</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;">
+          <h3 style="font-size:14px;font-weight:700;">📄 生成する書類</h3>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:9px;">
+          <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--dark);letter-spacing:0;margin-bottom:0;"><input type="checkbox" checked style="width:15px;height:15px;accent-color:var(--accent);"> 施工体制台帳</label>
+          <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--dark);letter-spacing:0;margin-bottom:0;"><input type="checkbox" checked style="width:15px;height:15px;accent-color:var(--accent);"> 作業員名簿</label>
+          <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--dark);letter-spacing:0;margin-bottom:0;"><input type="checkbox" checked style="width:15px;height:15px;accent-color:var(--accent);"> 安全書類（KY活動記録）</label>
+          <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;font-weight:400;color:var(--dark);letter-spacing:0;margin-bottom:0;"><input type="checkbox" style="width:15px;height:15px;accent-color:var(--accent);"> 持込機械等使用届</label>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="generateGreenFile()">🤖 AIで書類を自動生成する</button>
+      <div id="green-result" style="display:none;">
+        <div class="result-box">
+          <p style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:9px;font-weight:700;">✅ 生成完了 — 2026/04/01 14:32</p>
+          <div class="result-line">📋 <strong>施工体制台帳</strong>　→　作成完了（A4 / 2ページ）</div>
+          <div class="result-line">👷 <strong>作業員名簿</strong>　→　<span id="worker-count">0</span>名分 自動入力済み</div>
+          <div class="result-line">⛑️ <strong>安全書類</strong>　→　KY活動様式 作成完了</div>
+          <hr style="border:none;border-top:1px solid rgba(255,255,255,.12);margin:12px 0;">
+          <p style="font-size:12px;color:rgba(255,255,255,.6);">⏱ 処理時間: <strong style="color:var(--accent);">47秒</strong>　（手書き換算: 約2時間）</p>
+        </div>
+        <div style="display:flex;gap:9px;margin-top:11px;">
+          <button class="btn btn-green" style="flex:1;justify-content:center;" onclick="alert('グリーンサイト形式でダウンロードします')">⬇ グリーンサイト形式でDL</button>
+          <button class="btn btn-ghost" style="flex:1;justify-content:center;" onclick="alert('PDFプレビューを表示します')">👁 PDF プレビュー</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================
+     PANEL 2: インボイス管理
+     ==================================================== -->
+<div class="panel" id="panel-invoice">
+  <div class="sec-header">
+    <div><p>機能 02</p><h2>インボイス番号管理・自動チェック</h2></div>
+    <div style="margin-left:auto;"><button class="btn btn-primary btn-sm" onclick="addNewVendor()">＋ 協力業者を追加</button></div>
+  </div>
+  <div class="grid4" style="margin-bottom:22px;">
+    <div class="stat-box green"><div class="stat-label">登録業者数</div><div class="stat-value green">23社</div><div class="stat-sub">うち一人親方 14名</div></div>
+    <div class="stat-box"><div class="stat-label">適格事業者（確認済）</div><div class="stat-value accent">19社</div><div class="stat-sub">82.6% 対応済み</div></div>
+    <div class="stat-box red"><div class="stat-label">要確認・未登録</div><div class="stat-value red">4社</div><div class="stat-sub">⚠ 早急に対応が必要</div></div>
+    <div class="stat-box"><div class="stat-label">今月の控除リスク</div><div class="stat-value" style="font-size:18px;color:var(--red);">¥284,000</div><div class="stat-sub">未対応分の消費税相当額</div></div>
+  </div>
+  <div class="alert alert-warn" id="invoice-alert">
+    <div class="alert-icon">⚠️</div>
+    <div><strong>4社が未確認または期限切れです。</strong> 支払い前にインボイス番号の確認が必要です。確認が取れない場合、消費税の仕入税額控除が受けられない可能性があります。</div>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <h3 style="font-size:14px;font-weight:700;">協力業者一覧</h3>
+      <div style="display:flex;gap:7px;">
+        <input type="text" placeholder="業者名で検索..." style="width:190px;font-size:12px;padding:6px 11px;" oninput="filterVendors(this.value)">
+        <button class="btn btn-green btn-sm" onclick="bulkCheck()">🔍 一括チェック</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="data-table" id="vendor-table">
+        <thead><tr><th>業者名</th><th>区分</th><th>インボイス登録番号</th><th>確認日</th><th>ステータス</th><th>操作</th></tr></thead>
+        <tbody id="vendor-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================
+     PANEL 3: 施工実績ダッシュボード
+     ==================================================== -->
+<div class="panel" id="panel-dashboard">
+  <div class="sec-header">
+    <div><p>機能 03</p><h2>施工実績ダッシュボード</h2></div>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <select style="width:auto;font-size:12px;"><option>2026年 上半期</option><option>2025年 通期</option></select>
+      <button class="btn btn-dark btn-sm" onclick="alert('PDF報告書を生成します')">📄 PDF出力</button>
+    </div>
+  </div>
+  <div class="grid4" style="margin-bottom:22px;">
+    <div class="stat-box green"><div class="stat-label">今月売上</div><div class="stat-value green">¥12.8M</div><div class="stat-sub">前月比 ＋8.3%</div></div>
+    <div class="stat-box"><div class="stat-label">粗利率</div><div class="stat-value accent">32.4%</div><div class="stat-sub">目標 30% 達成 ✓</div></div>
+    <div class="stat-box mid"><div class="stat-label">進行中現場</div><div class="stat-value" style="color:var(--mid);">7件</div><div class="stat-sub">書類完成率 94%</div></div>
+    <div class="stat-box"><div class="stat-label">未収金</div><div class="stat-value" style="color:var(--red);">¥3.2M</div><div class="stat-sub">2件 / 60日以上</div></div>
+  </div>
+  <div class="grid2" style="gap:18px;margin-bottom:18px;">
+    <div class="card">
+      <h3 style="font-size:13px;font-weight:700;margin-bottom:18px;">月別売上・粗利推移（万円）</h3>
+      <div class="chart-wrap" id="chart-bars"></div>
+      <div class="chart-axis"></div>
+      <div style="display:flex;justify-content:space-around;margin-top:7px;font-size:10px;color:var(--gray);" id="chart-labels"></div>
+      <div style="display:flex;gap:14px;margin-top:10px;font-size:11px;">
+        <span><span style="display:inline-block;width:9px;height:9px;background:var(--mid);border-radius:2px;margin-right:4px;"></span>売上</span>
+        <span><span style="display:inline-block;width:9px;height:9px;background:var(--green);border-radius:2px;margin-right:4px;"></span>粗利</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:13px;font-weight:700;margin-bottom:14px;">現場別 粗利率ランキング</h3>
+      <div id="project-list"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="font-size:13px;font-weight:700;margin-bottom:14px;">進行中現場 — 一覧</h3>
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr><th>現場名</th><th>契約金額</th><th>原価（実績）</th><th>粗利</th><th>粗利率</th><th>書類</th><th>進捗</th></tr></thead>
+        <tbody>
+          <tr><td><strong>大阪市北区 ○○ビル給排水</strong></td><td>¥4,200,000</td><td>¥2,730,000</td><td style="color:var(--green);font-weight:700;">¥1,470,000</td><td><span class="badge badge-green">35.0%</span></td><td><span class="badge badge-green">完備</span></td><td><div class="progress-track" style="width:90px"><div class="progress-fill" style="width:65%"></div></div></td></tr>
+          <tr><td><strong>堺市 工場空調配管更新</strong></td><td>¥8,500,000</td><td>¥6,205,000</td><td style="color:var(--accent);font-weight:700;">¥2,295,000</td><td><span class="badge badge-orange">27.0%</span></td><td><span class="badge badge-orange">不足1件</span></td><td><div class="progress-track" style="width:90px"><div class="progress-fill orange" style="width:40%"></div></div></td></tr>
+          <tr><td><strong>吹田市 集合住宅排水改修</strong></td><td>¥1,850,000</td><td>¥1,110,000</td><td style="color:var(--green);font-weight:700;">¥740,000</td><td><span class="badge badge-green">40.0%</span></td><td><span class="badge badge-green">完備</span></td><td><div class="progress-track" style="width:90px"><div class="progress-fill" style="width:90%"></div></div></td></tr>
+          <tr><td><strong>東大阪市 倉庫消火設備</strong></td><td>¥3,300,000</td><td>¥2,640,000</td><td style="color:var(--red);font-weight:700;">¥660,000</td><td><span class="badge badge-red">20.0%</span></td><td><span class="badge badge-red">未提出</span></td><td><div class="progress-track" style="width:90px"><div class="progress-fill orange" style="width:20%"></div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================
+     PANEL 4: 現場報告AI
+     ==================================================== -->
+<div class="panel" id="panel-report">
+  <div class="sec-header"><div><p>機能 04 — AI ワークスペース</p><h2>現場報告AI</h2></div></div>
+  <div class="ws-shell">
+    <div>
+      <div class="ws-card">
+        <div class="ws-card-head"><div class="ws-card-num">1</div>書類の種類</div>
+        <div class="doc-type-grid" id="doc-type-grid">
+          <div class="doc-type-btn selected" onclick="selDoc('daily',this)"><div class="dt-icon">📋</div><div class="dt-name sel" id="dtn-daily">現場日報</div><div class="dt-desc">毎日の作業記録</div></div>
+          <div class="doc-type-btn" onclick="selDoc('weekly',this)"><div class="dt-icon">📅</div><div class="dt-name" id="dtn-weekly">週報</div><div class="dt-desc">週次まとめ報告</div></div>
+          <div class="doc-type-btn" onclick="selDoc('kouji',this)"><div class="dt-icon">🏗️</div><div class="dt-name" id="dtn-kouji">施工報告書</div><div class="dt-desc">工事完了時の報告</div></div>
+          <div class="doc-type-btn" onclick="selDoc('safety',this)"><div class="dt-icon">⛑️</div><div class="dt-name" id="dtn-safety">安全確認</div><div class="dt-desc">チェックシート</div></div>
+        </div>
+      </div>
+      <div id="report-form-area"></div>
+      <button class="btn-gen" id="report-gen-btn" onclick="generateReport()">🤖 現場日報を生成する</button>
+    </div>
+    <div class="out-panel">
+      <div class="out-head"><div class="out-title">✦ 生成結果</div><button class="out-btn" id="report-copy-btn" style="display:none" onclick="copyReport()">📋 コピー</button></div>
+      <div class="out-body" id="report-output"><div class="out-empty"><div style="font-size:36px;opacity:.2;">📋</div><div style="font-size:12px;">書類の種類を選んで入力後、生成ボタンを押してください</div></div></div>
+      <div class="out-status"><div class="status-dot" id="report-dot"></div><span id="report-status">待機中</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================
+     PANEL 5: 見積もりAI
+     ==================================================== -->
+<div class="panel" id="panel-quote">
+  <div class="sec-header"><div><p>機能 05 — AI ワークスペース</p><h2>見積もりAI</h2></div></div>
+  <div class="ws-shell">
+    <div>
+      <div class="ws-card">
+        <div class="ws-card-head"><div class="ws-card-num">1</div>基本情報</div>
+        <div style="display:flex;gap:9px;margin-bottom:10px;">
+          <div style="flex:1;"><div class="ws-flabel">御見積先 <span class="ws-req">必須</span></div><input class="ws-fi" id="q-client" placeholder="株式会社○○建設"></div>
+          <div style="flex:1;"><div class="ws-flabel">自社名</div><input class="ws-fi" id="q-myname" placeholder="龍輝工業株式会社"></div>
+        </div>
+        <div style="margin-bottom:10px;"><div class="ws-flabel">案件名 <span class="ws-req">必須</span></div><input class="ws-fi" id="q-project" placeholder="○○ビル3F 給排水管改修工事"></div>
+        <div><div class="ws-flabel">特記メモ（保証・工期・条件など）</div><input class="ws-fi" id="q-note" placeholder="例：保証2年、施工期間2週間"></div>
+      </div>
+      <div class="ws-card">
+        <div class="ws-card-head"><div class="ws-card-num">2</div>見積明細 <span class="ws-req">必須</span></div>
+        <div class="items-hdr"><span>品名・作業内容</span><span>数量</span><span>単位</span><span style="text-align:right">単価（円）</span><span></span></div>
+        <div id="quote-items"></div>
+        <button class="add-row" onclick="addQuoteItem()">＋ 行を追加</button>
+        <div class="subtotal">
+          <div class="st-row"><span>小計</span><span id="q-sub">¥0</span></div>
+          <div class="st-row"><span>消費税 10%</span><span id="q-tax">¥0</span></div>
+          <div class="st-row total"><span>合計（税込）</span><span id="q-total">¥0</span></div>
+        </div>
+      </div>
+      <button class="btn-gen" onclick="generateQuote()">🤖 見積書を生成する</button>
+    </div>
+    <div class="out-panel">
+      <div class="out-head"><div class="out-title">✦ 生成された見積書</div><button class="out-btn" id="quote-copy-btn" style="display:none" onclick="copyQuote()">📋 コピー</button></div>
+      <div class="out-body" id="quote-output"><div class="out-empty"><div style="font-size:36px;opacity:.2;">💴</div><div style="font-size:12px;">明細を入力して生成ボタンを押してください</div></div></div>
+      <div class="out-status"><div class="status-dot" id="quote-dot"></div><span id="quote-status">待機中</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================
+     PANEL 6: 議事録AI
+     ==================================================== -->
+<div class="panel" id="panel-minutes">
+  <div class="sec-header"><div><p>機能 06 — AI ワークスペース</p><h2>議事録AI</h2></div></div>
+  <div class="ws-shell">
+    <div>
+      <div class="ws-card">
+        <div class="ws-card-head"><div class="ws-card-num">1</div>会議情報</div>
+        <div class="ws-fg"><div class="ws-flabel">会議名 <span class="ws-req">必須</span></div><input class="ws-fi" id="m-title" placeholder="週次定例MTG / 現場打合せ"></div>
+        <div style="display:flex;gap:9px;">
+          <div style="flex:1;"><div class="ws-flabel">日時</div><input class="ws-fi" type="date" id="m-date"></div>
+          <div style="flex:1;"><div class="ws-flabel">場所・形式</div><input class="ws-fi" id="m-location" placeholder="会議室A / Zoom"></div>
+        </div>
+      </div>
+      <div class="ws-card">
+        <div class="ws-card-head"><div class="ws-card-num">2</div>参加者</div>
+        <div class="tag-wrap" id="m-tag-wrap">
+          <input class="tag-input" id="m-p-input" placeholder="名前を入力してEnterで追加..." onkeydown="addParticipant(event)">
+        </div>
+      </div>
+      <div class="ws-card">
+        <div class="ws-card-head"><div class="ws-card-num">3</div>会議内容 <span class="ws-req">必須</span></div>
+        <textarea class="ws-fta" id="m-raw" rows="9" placeholder="会議で話し合った内容をそのまま入力してください。&#10;&#10;例：&#10;・案件Aの進捗：田中さんから配管図面変更の報告&#10;・来週の現場立会いは木曜に決定（田中・鈴木）&#10;・見積再提出は鈴木が15日まで対応"></textarea>
+      </div>
+      <button class="btn-gen" onclick="generateMinutes()">🤖 議事録を生成する</button>
+    </div>
+    <div class="out-panel">
+      <div class="out-head"><div class="out-title">✦ 生成された議事録</div><button class="out-btn" id="minutes-copy-btn" style="display:none" onclick="copyMinutes()">📋 コピー</button></div>
+      <div class="out-body" id="minutes-output"><div class="out-empty"><div style="font-size:36px;opacity:.2;">📝</div><div style="font-size:12px;">会議情報と内容を入力して生成してください</div></div></div>
+      <div class="out-status"><div class="status-dot" id="minutes-dot"></div><span id="minutes-status">待機中</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== PANEL SWITCH =====
+function showPanel(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ===== AI OVERLAY =====
+function showAI(msg, ms) {
+  document.getElementById('aiMsg').textContent = msg;
+  document.getElementById('aiOverlay').classList.add('show');
+  return new Promise(r => setTimeout(() => { document.getElementById('aiOverlay').classList.remove('show'); r(); }, ms));
+}
+
+function showToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ===== CLAUDE API =====
+const PROXY_URL = '/api/claude'; // Vercel Proxy エンドポイント（設定後に有効化）
+const USE_PROXY = false;         // Proxy未設定時はfalse（デモモード）
+
+async function callClaude(system, user) {
+  if (!USE_PROXY) {
+    // デモモード：固定レスポンスを返す
+    return null;
+  }
+  const res = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system, user }),
+  });
+  const data = await res.json();
+  return data.text || '';
+}
+
+function parseJSON(text) {
+  if (!text) return null;
+  try { return JSON.parse(text.trim()); } catch {}
+  const m = text.match(/\{[\s\S]*\}/);
+  if (m) try { return JSON.parse(m[0]); } catch {}
+  return null;
+}
+
+const fmt = n => Number(n).toLocaleString('ja-JP');
+
+// ===== WORKER DATA =====
+const workers = [
+  { name: '田中 修一', role: '配管工', ccus: '登録済', qual: '2級管工事施工' },
+  { name: '山本 健二', role: '溶接工', ccus: '登録済', qual: '特別教育修了' },
+  { name: '佐藤 哲郎', role: '設備工', ccus: '登録済', qual: '1級管工事施工' },
+  { name: '中村 義雄', role: '一人親方', ccus: '未登録', qual: '特別教育修了' },
+  { name: '岡田 浩二', role: '配管工', ccus: '登録済', qual: '2級管工事施工' },
+  { name: '前田 誠司', role: '設備工', ccus: '登録済', qual: '玉掛技能講習' },
+  { name: '西村 雅彦', role: '一人親方', ccus: '登録済', qual: '2級管工事施工' },
+  { name: '木村 大輔', role: '配管工', ccus: '登録済', qual: '特別教育修了' },
+];
+const selectedWorkers = new Set();
+
+function initWorkerPool() {
+  document.getElementById('worker-pool').innerHTML = workers.map((w, i) =>
+    `<button class="btn btn-ghost btn-sm" id="wbtn-${i}" onclick="toggleWorker(${i})" style="font-size:12px;">
+      ${w.role === '一人親方' ? '🔧' : '👷'} ${w.name} <span style="font-size:10px;color:var(--gray);">(${w.role})</span>
+    </button>`
+  ).join('');
+}
+
+function toggleWorker(i) {
+  const btn = document.getElementById('wbtn-' + i);
+  if (selectedWorkers.has(i)) {
+    selectedWorkers.delete(i);
+    btn.style.cssText = '';
+  } else {
+    selectedWorkers.add(i);
+    btn.style.cssText = 'background:var(--accent);border-color:var(--accent);color:#fff;font-size:12px;';
+  }
+  const c = document.getElementById('selected-workers');
+  const nm = document.getElementById('no-worker-msg');
+  if (selectedWorkers.size === 0) {
+    c.innerHTML = '<span style="color:var(--gray);font-size:12px;" id="no-worker-msg">作業員を選択してください</span>';
+  } else {
+    c.innerHTML = [...selectedWorkers].map(i => {
+      const w = workers[i];
+      return `<div style="background:var(--light);border:1px solid var(--border);border-radius:6px;padding:5px 9px;font-size:11px;"><div style="font-weight:700;">${w.name}</div><div style="color:var(--gray);">${w.role} / ${w.qual}</div></div>`;
+    }).join('');
+  }
+}
+
+async function generateGreenFile() {
+  if (selectedWorkers.size === 0) { alert('作業員を1名以上選択してください'); return; }
+  await showAI('グリーンファイルを自動生成中...', 1800);
+  document.getElementById('worker-count').textContent = selectedWorkers.size;
+  const r = document.getElementById('green-result');
+  r.style.display = 'block';
+  ['gs3','gs4'].forEach(id => { const s = document.getElementById(id); s.classList.add('done'); s.classList.remove('active'); });
+}
+
+// ===== VENDOR DATA =====
+const vendors = [
+  { name: '山本配管工業', type: '法人', num: 'T1234567890123', date: '2026-01-10', status: 'ok' },
+  { name: '田中 一郎（一人親方）', type: '一人親方', num: 'T9876543210987', date: '2026-02-15', status: 'ok' },
+  { name: '関西設備サービス', type: '法人', num: 'T5566778899001', date: '2025-12-20', status: 'ok' },
+  { name: '佐藤 勝（一人親方）', type: '一人親方', num: '—', date: '—', status: 'err' },
+  { name: '大阪溶接工業', type: '法人', num: 'T1122334455667', date: '2025-11-30', status: 'ok' },
+  { name: '西村 良治（一人親方）', type: '一人親方', num: 'T3344556677889', date: '2026-01-05', status: 'ok' },
+  { name: '中川配管株式会社', type: '法人', num: 'T6677889900112', date: '2026-02-28', status: 'ok' },
+  { name: '木下 弘（一人親方）', type: '一人親方', num: '—', date: '—', status: 'warn' },
+  { name: '南大阪建設機材', type: '法人', num: 'T7788990011223', date: '2025-10-15', status: 'warn' },
+  { name: '前田 隆（一人親方）', type: '一人親方', num: '—', date: '—', status: 'err' },
+];
+
+function renderVendors(list) {
+  document.getElementById('vendor-tbody').innerHTML = list.map(v => {
+    const badge = v.status === 'ok' ? `<span class="badge badge-green">✓ 確認済</span>`
+      : v.status === 'warn' ? `<span class="badge badge-orange">⚠ 要確認</span>`
+      : `<span class="badge badge-red">✗ 未登録</span>`;
+    return `<tr><td><strong>${v.name}</strong></td>
+      <td>${v.type === '一人親方' ? `<span class="badge badge-blue">一人親方</span>` : `<span class="badge badge-gray">法人</span>`}</td>
+      <td style="font-family:monospace;font-size:12px;">${v.num}</td>
+      <td style="font-size:12px;color:var(--gray);">${v.date}</td>
+      <td>${badge}</td>
+      <td style="display:flex;gap:5px;">
+        <button class="btn btn-ghost btn-sm" onclick="checkVendor(this)">確認</button>
+        <button class="btn btn-ghost btn-sm">編集</button>
+      </td></tr>`;
+  }).join('');
+}
+function filterVendors(v) { renderVendors(vendors.filter(x => x.name.includes(v))); }
+async function checkVendor(btn) {
+  await showAI('国税庁DBで登録番号を照合中...', 1200);
+  const row = btn.closest('tr');
+  row.cells[4].innerHTML = `<span class="badge badge-green">✓ 確認済</span>`;
+  row.cells[3].textContent = '2026-03-19';
+  btn.textContent = '✓完了'; btn.disabled = true;
+}
+async function bulkCheck() {
+  await showAI('全業者の一括チェックを実行中...', 2400);
+  document.querySelectorAll('#vendor-table .badge-red, #vendor-table .badge-orange').forEach(b => { b.className = 'badge badge-green'; b.textContent = '✓ 確認済'; });
+  const al = document.getElementById('invoice-alert');
+  al.className = 'alert alert-ok';
+  al.innerHTML = '<div class="alert-icon">✅</div><div><strong>一括チェック完了。全23社の確認が取れました。</strong> 仕入税額控除リスク：¥0</div>';
+}
+function addNewVendor() {
+  const name = prompt('業者名を入力してください');
+  if (!name) return;
+  vendors.unshift({ name, type: '一人親方', num: '—', date: '—', status: 'err' });
+  renderVendors(vendors);
+}
+
+// ===== DASHBOARD =====
+function renderChart() {
+  const months = ['10月','11月','12月','1月','2月','3月'];
+  const sales = [980,1120,1050,1280,1180,1380];
+  const margins = [290,340,310,410,370,440];
+  const max = Math.max(...sales);
+  const h = 110;
+  document.getElementById('chart-bars').innerHTML = months.map((m,i) =>
+    `<div class="chart-col">
+      <div class="chart-val">${sales[i]}</div>
+      <div style="position:relative;width:100%;display:flex;align-items:flex-end;gap:2px;height:${h}px;">
+        <div class="chart-bar" style="height:${Math.round(sales[i]/max*h)}px;flex:1;"></div>
+        <div class="chart-bar green" style="height:${Math.round(margins[i]/max*h)}px;flex:1;"></div>
+      </div>
+    </div>`
+  ).join('');
+  document.getElementById('chart-labels').innerHTML = months.map(m => `<span>${m}</span>`).join('');
+}
+function renderProjects() {
+  const projects = [{name:'吹田市 集合住宅排水',rate:40},{name:'大阪市北区 ○○ビル',rate:35},{name:'堺市 工場空調配管',rate:27},{name:'東大阪市 倉庫消火',rate:20}];
+  document.getElementById('project-list').innerHTML = projects.map((p,i) => {
+    const c = p.rate >= 30 ? 'var(--green)' : p.rate >= 25 ? 'var(--accent)' : 'var(--red)';
+    return `<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="font-size:12px;font-weight:600;">${i+1}. ${p.name}</span><span style="font-family:'Oswald';font-size:15px;color:${c};font-weight:700;">${p.rate}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${p.rate*2.5}%;background:${c};"></div></div></div>`;
+  }).join('');
+}
+
+// ===== REPORT AI =====
+const SAFETY_ITEMS = ['KY活動（危険予知）実施','保護具（ヘルメット・安全帯等）着用確認','工具・機材の点検完了','作業区画・立入禁止区域の設置','足場・仮設備の安全確認','電気・ガス配管の養生確認','火気使用の許可取得','緊急連絡先・避難経路の確認','作業前ミーティング実施','天候・気象条件の確認','資材・廃材の整理整頓','近隣・第三者への安全配慮'];
+const WORK_TYPES = ['給水管工事','排水管工事','ガス管工事','空調ダクト工事','電気配線工事','溶接作業','コンクリート打設','塗装工事','防水工事','その他'];
+let currentDoc = 'daily';
+let checkedSafety = [];
+let reportResult = null;
+
+function selDoc(type, el) {
+  currentDoc = type;
+  document.querySelectorAll('.doc-type-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.dt-name').forEach(n => n.classList.remove('sel'));
+  el.classList.add('selected');
+  el.querySelector('.dt-name').classList.add('sel');
+  const labels = { daily:'現場日報', weekly:'週報', kouji:'施工報告書', safety:'安全確認' };
+  document.getElementById('report-gen-btn').textContent = `🤖 ${labels[type]}を生成する`;
+  renderReportForm();
+  document.getElementById('report-output').innerHTML = `<div class="out-empty"><div style="font-size:36px;opacity:.2;">${['📋','📅','🏗️','⛑️'][['daily','weekly','kouji','safety'].indexOf(type)]}</div><div style="font-size:12px;">入力後、生成ボタンを押してください</div></div>`;
+  document.getElementById('report-copy-btn').style.display = 'none';
+  reportResult = null;
+}
+
+function renderReportForm() {
+  const today = new Date().toISOString().split('T')[0];
+  const baseHtml = (showWork=true) => `
+    <div class="ws-frow">
+      <div class="ws-fg"><div class="ws-flabel">現場名 <span class="ws-req">必須</span></div><input class="ws-fi" id="r-site" placeholder="○○ビル3F配管工事"></div>
+      <div class="ws-fg"><div class="ws-flabel">担当者 <span class="ws-req">必須</span></div><input class="ws-fi" id="r-worker" placeholder="田中 太郎"></div>
+    </div>
+    ${showWork ? `<div class="ws-fg"><div class="ws-flabel">作業種別</div><select class="ws-fs" id="r-worktype"><option value="">選択</option>${WORK_TYPES.map(t=>`<option>${t}</option>`).join('')}</select></div>` : ''}`;
+
+  const area = document.getElementById('report-form-area');
+  if (currentDoc === 'daily') {
+    area.innerHTML = `
+      <div class="ws-card"><div class="ws-card-head"><div class="ws-card-num">2</div>基本情報</div>
+        <div class="ws-frow">
+          <div class="ws-fg"><div class="ws-flabel">作業日</div><input class="ws-fi" type="date" id="r-date" value="${today}"></div>
+          <div class="ws-fg"><div class="ws-flabel">天気</div><select class="ws-fs" id="r-weather"><option>晴れ</option><option>曇り</option><option>雨</option><option>雪</option></select></div>
+        </div>${baseHtml()}
+      </div>
+      <div class="ws-card"><div class="ws-card-head"><div class="ws-card-num">3</div>作業内容</div>
+        <div class="ws-fg"><div class="ws-flabel">本日の進捗・作業内容</div><textarea class="ws-fta" id="r-progress" rows="3" placeholder="例：3F〜4F間の給水管（VP50）配管。約70%完了。"></textarea></div>
+        <div class="ws-frow">
+          <div class="ws-fg"><div class="ws-flabel">問題・特記事項</div><textarea class="ws-fta" id="r-issues" rows="2" placeholder="例：壁内に既存配管を発見。迂回対応。"></textarea></div>
+          <div class="ws-fg"><div class="ws-flabel">翌日の予定</div><textarea class="ws-fta" id="r-next" rows="2" placeholder="例：残り配管完了後、水圧テスト。"></textarea></div>
+        </div>
+      </div>`;
+  } else if (currentDoc === 'safety') {
+    checkedSafety = [];
+    area.innerHTML = `
+      <div class="ws-card"><div class="ws-card-head"><div class="ws-card-num">2</div>基本情報</div>
+        <div class="ws-frow">
+          <div class="ws-fg"><div class="ws-flabel">日付</div><input class="ws-fi" type="date" id="r-date" value="${today}"></div>
+          <div class="ws-fg"><div class="ws-flabel">天気</div><select class="ws-fs" id="r-weather"><option>晴れ</option><option>曇り</option><option>雨</option></select></div>
+        </div>${baseHtml()}
+      </div>
+      <div class="ws-card"><div class="ws-card-head"><div class="ws-card-num">3</div>安全確認チェック <span id="check-count" style="font-size:10px;color:var(--gray);margin-left:4px;">0/${SAFETY_ITEMS.length}</span></div>
+        <div class="check-grid">${SAFETY_ITEMS.map((item,i)=>`<div class="check-item" id="ci-${i}" onclick="toggleSafety(${i})"><div class="check-box" id="cb-${i}"></div><div class="check-label">${item}</div></div>`).join('')}</div>
+        <div style="margin-top:10px;"><div class="ws-flabel">特記事項</div><textarea class="ws-fta" id="r-note" rows="2" placeholder="例：本日は溶接作業あり。火気監視員を配置済み。"></textarea></div>
+      </div>`;
+  } else {
+    area.innerHTML = `<div class="ws-card"><div class="ws-card-head"><div class="ws-card-num">2</div>情報入力</div>${baseHtml()}<div class="ws-fg"><div class="ws-flabel">作業内容・特記事項</div><textarea class="ws-fta" id="r-progress" rows="5" placeholder="作業内容や特記事項を入力してください"></textarea></div></div>`;
+  }
+}
+
+function toggleSafety(i) {
+  const el = document.getElementById('ci-' + i);
+  const cb = document.getElementById('cb-' + i);
+  if (checkedSafety.includes(i)) {
+    checkedSafety = checkedSafety.filter(x => x !== i);
+    el.classList.remove('checked'); cb.textContent = '';
+  } else {
+    checkedSafety.push(i);
+    el.classList.add('checked'); cb.textContent = '✓';
+  }
+  document.getElementById('check-count').textContent = `${checkedSafety.length}/${SAFETY_ITEMS.length}`;
+}
+
+async function generateReport() {
+  const site = document.getElementById('r-site')?.value;
+  const worker = document.getElementById('r-worker')?.value;
+  if (!site || !worker) { alert('現場名・担当者は必須です'); return; }
+
+  const dot = document.getElementById('report-dot');
+  const status = document.getElementById('report-status');
+  const output = document.getElementById('report-output');
+  dot.classList.add('active'); status.textContent = 'AIが生成中...';
+  output.innerHTML = '<div class="out-loading"><div class="out-spinner"></div><div style="font-size:12px;color:rgba(255,255,255,.5);">AIが生成中...</div></div>';
+
+  await new Promise(r => setTimeout(r, 1400));
+
+  // デモ固定レスポンス
+  const demos = {
+    daily: { summary:'本日は3F〜4F間の給水管（VP50）配管工事を実施。工程は計画通り進捗しており、品質・安全管理ともに良好。', work_detail:'・3F〜4F給水管（VP50）配管：残り約30%\n・継手部分のシーリング処理：完了\n・立て管貫通部の防火措置：実施済み', safety:'・朝礼時にKY活動を実施。高所作業の注意喚起\n・全員ヘルメット・安全帯着用確認済み', issues:'特段の問題なし。計画通り進捗。', next_plan:'・残り配管（30%）を完了させ水圧テストを実施\n・養生撤去・清掃作業', comment:'工程の遅延なく順調に進捗。明日の水圧テストに向けて準備を整える。' },
+    safety: { header:'2026年本日付。○○ビル3F配管工事現場において安全確認チェックシートを実施。', risk_assessment:'・高所作業（3F〜4F）：安全帯の二重確認を徹底\n・配管切断作業：火花飛散防止養生を実施', instructions:'・作業前の体調確認を徹底すること\n・梯子昇降時は三点支持を守ること\n・工具の置き忘れに注意し整理整頓を徹底', supervisor_comment:'本日の安全確認は概ね良好。高所作業時の安全帯二重確認を引き続き徹底すること。' },
+    weekly: { week_summary:'今週は○○ビル3F〜5F給排水管工事を中心に施工を実施。工程の75%が完了し、品質・安全管理ともに計画通り進捗。', daily_report:'・月曜：3F給水管配管 80%完了\n・火曜：4F排水管配管 完了\n・水曜：5F給水管配管 開始\n・木曜：継手部シーリング処理\n・金曜：水圧試験実施・合格', achievements:'・給水管（VP50）3F〜4F 配管完了\n・排水管試験合格（1.75MPa×30分）\n・安全無事故継続 累計45日', safety:'・全日KY活動実施\n・高所作業時の安全帯着用100%確認', issues:'特段の問題なし。来週の工程に影響なし。', next_week:'・5F給水管残り配管\n・全階の試験・養生作業\n・グリーンサイト書類更新', comment:'工程は計画通りで品質も良好。来週は仕上げ工程に集中する。' },
+    kouji: { overview:'本工事は○○ビルの給排水衛生設備の全面更新工事である。老朽化した既存配管を撤去し、新設配管を3F〜5Fに施工した。工期は計画通り完了し、品質基準をすべてクリアした。', scope_detail:'・既存給水管（VP40）撤去：3F〜5F全フロア\n・新設給水管（VP50）配管：延長約120m\n・排水管（VU75）配管：延長約80m\n・衛生器具取付け：洗面台6台・大便器6基', process:'・既存配管撤去・搬出\n・スリーブ貫通・防火措置\n・新設配管・継手処理\n・水圧試験・漏水確認\n・養生・清掃・引渡し', quality:'・水圧試験合格（0.75MPa×30分 全フロア）\n・排水試験合格（満水試験 全系統）\n・施工写真記録 完備', safety_record:'・KY活動 全作業日実施\n・安全無事故 工期全期間', issues:'特段の重大問題なし。一部壁内配管が図面と異なったが現場対応にて解決。', handover:'・設備台帳・施工図提出済み\n・定期点検年1回を推奨\n・緊急連絡先：龍輝工業 担当 田中', conclusion:'本工事は計画通り完了し、品質・安全ともに良好な結果を得た。今後の維持管理についても適切な対応をお願いしたい。' },
+  };
+
+  reportResult = { type: currentDoc, site, worker, data: demos[currentDoc] || demos.daily };
+  renderReportOutput(reportResult);
+  dot.classList.remove('active'); status.textContent = '生成完了';
+  document.getElementById('report-copy-btn').style.display = 'block';
+}
+
+function renderReportOutput(r) {
+  const { type, site, worker, data: d } = r;
+  const output = document.getElementById('report-output');
+  const S = (label, value) => value ? `<div class="out-section"><div class="out-sec-label">${label}</div><div class="out-text">${value}</div></div>` : '';
+  let html = '';
+  if (type === 'daily') {
+    html = `<div class="out-section"><div style="background:rgba(240,122,26,.08);border:1px solid rgba(240,122,26,.2);border-radius:7px;padding:9px 13px;margin-bottom:3px;"><div style="font-weight:900;color:var(--accent);margin-bottom:2px;">📋 現場日報 — ${site}</div><div style="font-size:10px;color:rgba(255,255,255,.5);">${worker}</div></div></div>${S('作業概要',d.summary)}${S('本日の作業内容',d.work_detail)}${S('安全・品質管理',d.safety)}${S('問題点・対策',d.issues)}${S('明日の作業予定',d.next_plan)}${S('担当者所見',d.comment)}`;
+  } else if (type === 'weekly') {
+    html = `<div class="out-section"><div style="background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.2);border-radius:7px;padding:9px 13px;"><div style="font-weight:900;color:var(--gold);">📅 週報 — ${site}</div><div style="font-size:10px;color:rgba(255,255,255,.5);">${worker}</div></div></div>${S('週間概要',d.week_summary)}${S('日別作業実績',d.daily_report)}${S('今週の成果',d.achievements)}${S('安全管理',d.safety)}${S('問題点・対策',d.issues)}${S('来週の作業計画',d.next_week)}${S('週次所見',d.comment)}`;
+  } else if (type === 'kouji') {
+    html = `<div class="out-section"><div style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);border-radius:7px;padding:9px 13px;"><div style="font-weight:900;color:var(--cyan);">🏗️ 施工報告書 — ${site}</div><div style="font-size:10px;color:rgba(255,255,255,.5);">${worker}</div></div></div>${S('工事概要',d.overview)}${S('施工範囲・工法',d.scope_detail)}${S('施工経緯・工程',d.process)}${S('品質管理・検査',d.quality)}${S('安全管理',d.safety_record)}${S('問題点・対処',d.issues)}${S('引渡・維持管理',d.handover)}${S('総括',d.conclusion)}`;
+  } else if (type === 'safety') {
+    const cl = SAFETY_ITEMS.filter((_,i) => checkedSafety.includes(i));
+    const ul = SAFETY_ITEMS.filter((_,i) => !checkedSafety.includes(i));
+    html = `<div class="out-section"><div style="background:rgba(13,148,136,.08);border:1px solid rgba(13,148,136,.2);border-radius:7px;padding:9px 13px;"><div style="font-weight:900;color:var(--green);">⛑️ 安全確認チェックシート — ${site}</div><div style="font-size:10px;color:rgba(255,255,255,.5);">${worker}</div></div></div><div class="out-section"><div class="out-sec-label">確認状況（${cl.length}/${SAFETY_ITEMS.length}）</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">${SAFETY_ITEMS.map((item,i)=>`<div style="padding:5px 8px;border-radius:5px;font-size:11px;${checkedSafety.includes(i)?'background:rgba(13,148,136,.1);border:1px solid rgba(13,148,136,.2);':'background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);'}">${checkedSafety.includes(i)?'✅':'⬜'} ${item}</div>`).join('')}</div></div>${S('リスクと対策',d.risk_assessment)}${S('安全指示事項',d.instructions)}${S('監督者コメント',d.supervisor_comment)}`;
+  }
+  output.innerHTML = html;
+}
+
+function copyReport() {
+  if (!reportResult) return;
+  const { type, site, worker, data: d } = reportResult;
+  const labels = { daily:'現場日報', weekly:'週報', kouji:'施工報告書', safety:'安全確認' };
+  navigator.clipboard.writeText(`【${labels[type]}】${site}\n担当：${worker}\n\n${Object.values(d).filter(Boolean).join('\n\n')}`);
+  showToast();
+}
+
+// ===== QUOTE AI =====
+let quoteItems = [];
+let qid = 0;
+const newQItem = () => ({ id: ++qid, name: '', qty: 1, unit: '式', price: 0 });
+let quoteResult = null;
+
+function initQuote() {
+  quoteItems = [newQItem(), newQItem(), newQItem()];
+  renderQuoteItems();
+}
+
+function renderQuoteItems() {
+  document.getElementById('quote-items').innerHTML = quoteItems.map(item =>
+    `<div class="item-row" id="qrow-${item.id}">
+      <input class="ii" placeholder="給水管VP50配管工事" value="${item.name}" oninput="updateQItem(${item.id},'name',this.value)">
+      <input class="ii ii-r" type="number" min="1" value="${item.qty}" oninput="updateQItem(${item.id},'qty',this.value)">
+      <select class="ii" onchange="updateQItem(${item.id},'unit',this.value)">${['式','m','本','個','枚','台','人工','㎡','箇所'].map(u=>`<option${u===item.unit?' selected':''}>${u}</option>`).join('')}</select>
+      <input class="ii ii-r" type="number" min="0" placeholder="0" value="${item.price||''}" oninput="updateQItem(${item.id},'price',this.value)">
+      <button class="ii-del" onclick="delQItem(${item.id})">🗑</button>
+    </div>`
+  ).join('');
+  updateQTotals();
+}
+
+function updateQItem(id, key, val) {
+  const item = quoteItems.find(i => i.id === id);
+  if (item) { item[key] = key === 'qty' || key === 'price' ? Number(val) : val; updateQTotals(); }
+}
+function delQItem(id) { quoteItems = quoteItems.filter(i => i.id !== id); renderQuoteItems(); }
+function addQuoteItem() { quoteItems.push(newQItem()); renderQuoteItems(); }
+
+function updateQTotals() {
+  const valid = quoteItems.filter(i => i.name && i.price > 0);
+  const sub = valid.reduce((s,i) => s + (i.qty||0) * i.price, 0);
+  const tax = Math.floor(sub * 0.1);
+  document.getElementById('q-sub').textContent = `¥${fmt(sub)}`;
+  document.getElementById('q-tax').textContent = `¥${fmt(tax)}`;
+  document.getElementById('q-total').textContent = `¥${fmt(sub + tax)}`;
+}
+
+async function generateQuote() {
+  const client = document.getElementById('q-client').value;
+  const project = document.getElementById('q-project').value;
+  const valid = quoteItems.filter(i => i.name && i.price > 0);
+  if (!client || !project || !valid.length) { alert('御見積先・案件名・明細（1行以上）は必須です'); return; }
+
+  const dot = document.getElementById('quote-dot');
+  const status = document.getElementById('quote-status');
+  const output = document.getElementById('quote-output');
+  dot.classList.add('active'); status.textContent = 'AIが生成中...';
+  output.innerHTML = '<div class="out-loading"><div class="out-spinner"></div><div style="font-size:12px;color:rgba(255,255,255,.5);">見積書を生成中...</div></div>';
+
+  await new Promise(r => setTimeout(r, 1200));
+
+  const sub = valid.reduce((s,i) => s + (i.qty||0) * i.price, 0);
+  const tax = Math.floor(sub * 0.1);
+  const total = sub + tax;
+  const myName = document.getElementById('q-myname').value || '龍輝工業株式会社';
+  const date = new Date().toLocaleDateString('ja-JP');
+
+  quoteResult = { client, project, myName, date, items: valid, sub, tax, total,
+    summary: `本見積書は${project}に関する施工費用のご提案です。長年の実績と専門技術により、品質・安全・工期の全てにおいて最高水準のサービスをご提供いたします。`,
+    remarks: `・お支払条件：工事完了後30日以内\n・工事期間：受注後2週間以内に着工予定\n・保証期間：完成引渡しより1年間\n・本見積の有効期限：発行日より30日間\n・材料価格変動により一部変更となる場合があります\n・施工に伴う諸官庁申請費用は別途ご相談となります`
+  };
+
+  output.innerHTML = renderQuoteOutput(quoteResult);
+  dot.classList.remove('active'); status.textContent = '生成完了';
+  document.getElementById('quote-copy-btn').style.display = 'block';
+}
+
+function renderQuoteOutput(r) {
+  return `<div class="out-section"><div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px;">
+    <div><div style="font-size:15px;font-weight:900;color:var(--gold);margin-bottom:2px;">${r.myName}</div><div style="font-size:10px;color:rgba(255,255,255,.4);">御見積書　発行日：${r.date}</div></div>
+    <div style="text-align:right;font-size:10px;color:rgba(255,255,255,.4);">${r.client} 御中</div></div>
+    <div style="font-size:13px;font-weight:900;color:var(--white);margin-bottom:5px;">📋 ${r.project}</div>
+    <div class="out-text">${r.summary}</div></div>
+  <div class="out-section"><div class="out-sec-label">見積明細</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;">
+      <thead><tr style="background:rgba(240,180,41,.1);">${['品名','数量','単位','単価','金額'].map(h=>`<th style="padding:6px 8px;text-align:left;color:var(--gold);font-size:10px;">${h}</th>`).join('')}</tr></thead>
+      <tbody>${r.items.map(i=>`<tr><td style="padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(241,245,249,.8);">${i.name}</td><td style="padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(241,245,249,.8);">${i.qty}</td><td style="padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(241,245,249,.8);">${i.unit}</td><td style="padding:6px 8px;text-align:right;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(241,245,249,.8);">¥${fmt(i.price)}</td><td style="padding:6px 8px;text-align:right;border-bottom:1px solid rgba(255,255,255,.04);color:rgba(241,245,249,.8);">¥${fmt(i.qty*i.price)}</td></tr>`).join('')}</tbody>
+    </table>
+    <div style="background:rgba(240,180,41,.05);border-radius:7px;padding:10px 12px;margin-top:8px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.5);margin-bottom:3px;"><span>小計</span><span>¥${fmt(r.sub)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.5);margin-bottom:3px;"><span>消費税（10%）</span><span>¥${fmt(r.tax)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:900;color:var(--gold);border-top:1px solid rgba(255,255,255,.08);padding-top:7px;margin-top:4px;"><span>御見積合計</span><span>¥${fmt(r.total)}</span></div>
+    </div></div>
+  <div class="out-section"><div class="out-sec-label">備考・補足事項</div><div class="out-text">${r.remarks}</div></div>`;
+}
+
+function copyQuote() {
+  if (!quoteResult) return;
+  const r = quoteResult;
+  const lines = ['【御見積書】',`${r.client} 御中`,`発行日：${r.date} / 案件：${r.project}`,'',
+    r.items.map(i=>`${i.name}　${i.qty}${i.unit}　¥${fmt(i.price)}　¥${fmt(i.qty*i.price)}`).join('\n'),'',
+    `小計：¥${fmt(r.sub)}`,`消費税（10%）：¥${fmt(r.tax)}`,`合計（税込）：¥${fmt(r.total)}`,'','【備考】',r.remarks];
+  navigator.clipboard.writeText(lines.join('\n'));
+  showToast();
+}
+
+// ===== MINUTES AI =====
+let mParticipants = [];
+let minutesResult = null;
+
+function addParticipant(e) {
+  const input = document.getElementById('m-p-input');
+  if ((e.key === 'Enter' || e.key === ',') && input.value.trim()) {
+    e.preventDefault();
+    mParticipants.push(input.value.trim());
+    input.value = '';
+    renderTags();
+  }
+}
+function removeParticipant(i) { mParticipants.splice(i,1); renderTags(); }
+function renderTags() {
+  const wrap = document.getElementById('m-tag-wrap');
+  const input = document.getElementById('m-p-input');
+  wrap.innerHTML = '';
+  mParticipants.forEach((p,i) => {
+    const tag = document.createElement('div');
+    tag.className = 'tag';
+    tag.innerHTML = `${p}<button class="tag-x" onclick="removeParticipant(${i})">×</button>`;
+    wrap.appendChild(tag);
+  });
+  wrap.appendChild(input);
+  input.focus();
+}
+
+async function generateMinutes() {
+  const title = document.getElementById('m-title').value;
+  const raw = document.getElementById('m-raw').value;
+  if (!title || !raw.trim()) { alert('会議名と会議内容は必須です'); return; }
+
+  const dot = document.getElementById('minutes-dot');
+  const status = document.getElementById('minutes-status');
+  const output = document.getElementById('minutes-output');
+  dot.classList.add('active'); status.textContent = 'AIが生成中...';
+  output.innerHTML = '<div class="out-loading"><div class="out-spinner"></div><div style="font-size:12px;color:rgba(255,255,255,.5);">議事録を生成中...</div></div>';
+
+  await new Promise(r => setTimeout(r, 1300));
+
+  const date = document.getElementById('m-date').value;
+  const location = document.getElementById('m-location').value;
+
+  minutesResult = { title, date, location, participants: [...mParticipants],
+    summary: '今週の現場進捗確認と来週の作業計画について協議した。案件Aは配管図面変更対応、来週の現場立会い日程、見積再提出の対応方針を決定した。',
+    agenda: '・案件A（○○ビル配管工事）の進捗確認\n・田中氏より配管図面変更の報告と対応方針の協議\n・来週の現場立会い日程の調整\n・見積書再提出の対応方針の決定\n・その他連絡事項',
+    decisions: '・来週の現場立会いは木曜日に決定（田中・鈴木が対応）\n・見積書は鈴木が15日までに再提出\n・配管図面変更による追加費用は元請けに交渉する',
+    actions: [
+      { task: '現場立会い（○○ビル 3F配管確認）', owner: '田中・鈴木', deadline: '来週木曜日' },
+      { task: '見積書再提出（配管図面変更分含む）', owner: '鈴木', deadline: '15日まで' },
+      { task: '追加費用の元請け交渉', owner: '田中', deadline: '今週中に連絡' },
+    ],
+    next_meeting: '来週月曜日 10:00〜 会議室A'
+  };
+
+  output.innerHTML = renderMinutesOutput(minutesResult);
+  dot.classList.remove('active'); status.textContent = '生成完了';
+  document.getElementById('minutes-copy-btn').style.display = 'block';
+}
+
+function renderMinutesOutput(r) {
+  const actions = (r.actions || []).map(a =>
+    `<div class="action-item"><div class="a-dot"></div><div><div class="a-task">${a.task}</div><div class="a-meta">${a.owner ? `担当：${a.owner}` : ''}${a.owner && a.deadline ? '　' : ''}${a.deadline ? `期限：${a.deadline}` : ''}</div></div></div>`
+  ).join('');
+  return `<div class="out-section"><div style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);border-radius:7px;padding:10px 13px;">
+    <div style="font-size:14px;font-weight:900;color:var(--cyan);margin-bottom:4px;">${r.title}</div>
+    <div style="font-size:10px;color:rgba(255,255,255,.4);line-height:1.8;">📅 ${r.date}${r.location ? `　📍 ${r.location}` : ''}${r.participants.length > 0 ? `<br>👥 ${r.participants.join('、')}` : ''}</div>
+  </div></div>
+  <div class="out-section"><div class="out-sec-label">会議概要</div><div class="out-text">${r.summary}</div></div>
+  <div class="out-section"><div class="out-sec-label">議題・討議内容</div><div class="out-text">${r.agenda}</div></div>
+  <div class="out-section"><div class="out-sec-label">決定事項</div><div class="out-text">${r.decisions}</div></div>
+  ${actions ? `<div class="out-section"><div class="out-sec-label">アクションアイテム</div><div class="action-list">${actions}</div></div>` : ''}
+  ${r.next_meeting ? `<div class="out-section"><div class="out-sec-label">次回会議</div><div class="out-text">${r.next_meeting}</div></div>` : ''}`;
+}
+
+function copyMinutes() {
+  if (!minutesResult) return;
+  const r = minutesResult;
+  const lines = [`【議事録】${r.title}`,`日時：${r.date}　場所：${r.location||'－'}`,`参加者：${r.participants.join('、')||'－'}`,'','■ 会議概要',r.summary,'','■ 議題・討議内容',r.agenda,'','■ 決定事項',r.decisions,'','■ アクションアイテム',...(r.actions||[]).map(a=>`・${a.task}　担当：${a.owner}　期限：${a.deadline}`),...(r.next_meeting?['','■ 次回会議',r.next_meeting]:[])];
+  navigator.clipboard.writeText(lines.join('\n'));
+  showToast();
+}
+
+// ===== INIT =====
+initWorkerPool();
+renderVendors(vendors);
+renderChart();
+renderProjects();
+initQuote();
+document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
+renderReportForm();
+</script>
+</body>
+</html>
