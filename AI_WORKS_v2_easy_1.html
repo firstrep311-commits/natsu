@@ -19,7 +19,7 @@
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Zen Kaku Gothic New',sans-serif;-webkit-text-size-adjust:100%;}
 
 /* ── LAYOUT ── */
-.shell{display:flex;height:100vh;overflow:hidden;}
+.shell{display:flex;height:100vh;height:100svh;overflow:hidden;}
 
 /* ── SIDEBAR ── */
 .sidebar{width:72px;min-width:72px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;}
@@ -263,6 +263,38 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Zen Ka
   .modal-box{margin:0;border-radius:14px;}
   .home-card{padding:16px 14px;}
   .hc-desc{display:none;}
+}
+
+/* ── MOBILE BOTTOM NAV (≤480px) ── */
+@media(max-width:480px){
+  .shell{flex-direction:column;}
+  .sidebar{
+    width:100%;min-width:unset;height:56px;
+    flex-direction:row;
+    position:fixed;bottom:0;left:0;right:0;
+    border-right:none;border-top:1px solid var(--border);
+    z-index:100;
+  }
+  .sb-logo,.sb-foot{display:none;}
+  .sb-nav{
+    flex-direction:row;padding:0;
+    justify-content:space-around;align-items:stretch;width:100%;
+  }
+  .sb-item{
+    width:auto;flex:1;height:100%;
+    border-radius:0;padding:4px 2px;
+    justify-content:center;
+  }
+  .sb-icon{font-size:20px;}
+  .sb-lbl{font-size:9px;}
+  .content{padding-bottom:56px;}
+  .scroll{padding:12px 10px 80px;}
+  .fi,.fs,.fta{font-size:16px;}
+  .topbar{height:46px;padding:0 10px;}
+  .topbar-title{font-size:13px;letter-spacing:1px;}
+  .card{padding:14px;}
+  .toast{bottom:68px;}
+  .out-body{max-height:50vh;}
 }
 </style>
 </head>
