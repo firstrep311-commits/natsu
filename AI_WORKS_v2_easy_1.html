@@ -307,35 +307,20 @@ const { useState, useRef } = React;
 const fmt = n => Number(n).toLocaleString('ja-JP');
 let uid = 0;
 const newItem = () => ({ id: ++uid, name: '', qty: 1, unit: '式', unitPrice: 0 });
-const KEY_STORAGE = 'aiworks_api_key_v2';
-const getKey = () => sessionStorage.getItem(KEY_STORAGE) || '';
-const saveKey = k => sessionStorage.setItem(KEY_STORAGE, k);
-
-async function callClaude(apiKey, system, user) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true"
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1500,
-      system,
-      messages: [{ role: "user", content: user }]
-    })
+async function callClaude(system, user) {
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system, user })
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    const msg = err.error?.message || '';
-    if (res.status === 401) throw new Error('APIキーが正しくありません。もう一度ご確認ください。');
+    const msg = err.error || '';
     if (res.status === 429) throw new Error('利用制限に達しました。しばらく待ってから再試行してください。');
     throw new Error(msg || `通信エラー（${res.status}）が発生しました。`);
   }
   const data = await res.json();
-  return data.content?.find(b => b.type === 'text')?.text || '';
+  return data.text || '';
 }
 
 // ── ヘルプモーダル ──────────────────────────────────────────
@@ -365,123 +350,6 @@ function HelpModal({ title, steps, tip, onClose }) {
   );
 }
 
-// ── APIキー設定画面 ──────────────────────────────────────────
-function SetupScreen({ onSuccess }) {
-  const [key, setKey] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState('');
-  const [step, setStep] = useState(1); // 1=説明, 2=入力
-
-  const handleSubmit = async () => {
-    const k = key.trim();
-    if (!k) { setErr('APIキーを入力してください。'); return; }
-    if (!k.startsWith('sk-ant-')) {
-      setErr('形式が違います。「sk-ant-」で始まるキーをコピーしてください。');
-      return;
-    }
-    setLoading(true); setErr('');
-    try {
-      await callClaude(k, 'respond with ok', 'ok');
-      saveKey(k);
-      onSuccess(k);
-    } catch(e) {
-      setErr(e.message);
-    }
-    setLoading(false);
-  };
-
-  return (
-    <div className="setup-overlay">
-      <div className="setup-wrap">
-        <div className="setup-box">
-          <div className="setup-logo">AI WORKS</div>
-          <div className="setup-sub">現場の書類作業を自動化するAIツール</div>
-
-          {step === 1 && (
-            <>
-              <div className="setup-section-title">🔑 はじめに1回だけ設定が必要です</div>
-              <div className="setup-desc">
-                このツールを動かすには、Anthropic社の「APIキー」という<br/>
-                パスワードのような文字列が必要です。<br/>
-                無料で取得できます。手順通り進めてください。
-              </div>
-
-              <div className="guide-steps">
-                <div className="guide-step">
-                  <div className="guide-step-num">1</div>
-                  <div className="guide-step-body">
-                    <div className="guide-step-title">Anthropicのサイトを開く</div>
-                    <div className="guide-step-desc">下のボタンをタップして、アカウントを作成します（メールアドレスだけでOK）。</div>
-                    <a className="guide-step-link" href="https://console.anthropic.com" target="_blank">→ Anthropicのサイトを開く</a>
-                  </div>
-                </div>
-                <div className="guide-step">
-                  <div className="guide-step-num">2</div>
-                  <div className="guide-step-body">
-                    <div className="guide-step-title">「API Keys」→「Create Key」をタップ</div>
-                    <div className="guide-step-desc">ログイン後、左メニューの「API Keys」を開き、「Create Key」ボタンを押します。</div>
-                  </div>
-                </div>
-                <div className="guide-step">
-                  <div className="guide-step-num">3</div>
-                  <div className="guide-step-body">
-                    <div className="guide-step-title">表示されたキーをコピーする</div>
-                    <div className="guide-step-desc">下のような文字列が表示されます。「コピー」ボタンを押してコピーしてください。</div>
-                    <div className="guide-code">sk-ant-api03-XXXXXXXXXXXXXXXXXXXXXXXX...</div>
-                  </div>
-                </div>
-                <div className="guide-step">
-                  <div className="guide-step-num">4</div>
-                  <div className="guide-step-body">
-                    <div className="guide-step-title">次の画面でキーを貼り付ける</div>
-                    <div className="guide-step-desc">コピーできたら下のボタンを押して、入力欄に貼り付けてください。</div>
-                  </div>
-                </div>
-              </div>
-
-              <button className="setup-btn" onClick={() => setStep(2)}>コピーできました → 次へ</button>
-            </>
-          )}
-
-          {step === 2 && (
-            <>
-              <div className="setup-section-title">📋 APIキーを貼り付けてください</div>
-              <div className="setup-desc" style={{marginBottom:16}}>
-                先ほどコピーした「sk-ant-...」から始まる文字列を下の欄に貼り付けてください。
-              </div>
-              <div className="setup-label">APIキー</div>
-              <input
-                className="setup-input"
-                type="password"
-                placeholder="sk-ant-api03-..."
-                value={key}
-                onChange={e => setKey(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                autoComplete="off"
-              />
-              <div className="setup-input-hint">
-                ※ スマホの場合：入力欄を長押し →「貼り付け」を選ぶと入力できます
-              </div>
-              {err && <div className="setup-err">⚠️ {err}<br/>もう一度キーをコピーして貼り付けてみてください。</div>}
-              <button className="setup-btn" onClick={handleSubmit} disabled={loading || !key.trim()}>
-                {loading ? '⚙️ 確認中です。しばらくお待ちください...' : '✅ 接続して使い始める'}
-              </button>
-              <div style={{marginTop:12,textAlign:'center'}}>
-                <button style={{background:'none',border:'none',color:'var(--text3)',fontSize:13,cursor:'pointer',textDecoration:'underline'}} onClick={() => setStep(1)}>← 手順に戻る</button>
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="setup-security">
-          <strong>🔒 セキュリティについて</strong><br/>
-          入力したキーはあなたのブラウザの中だけに保存されます。ブラウザを閉じると自動で消えます。他の人に見られることはありません。
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Toast Hook ───────────────────────────────────────────
 function useToast() {
   const [toast, setToast] = useState(false);
@@ -492,7 +360,7 @@ function useToast() {
 // ═══════════════════════════════════════════════════════════
 // 現場報告 AI
 // ═══════════════════════════════════════════════════════════
-function GenbaReport({ apiKey }) {
+function GenbaReport() {
   const [form, setForm] = useState({ date: new Date().toISOString().split('T')[0], site: '', worker: '', weather: '晴れ', workType: '', progress: '', issues: '', next: '' });
   const [photos, setPhotos] = useState([]);
   const [result, setResult] = useState(null);
@@ -516,7 +384,7 @@ function GenbaReport({ apiKey }) {
     const system = `あなたは建設・配管工事の現場監督経験を持つ、プロの報告書作成専門家です。読みやすく信頼性の高い現場日報を作成します。箇条書きは「・」を使い具体的に。安全・品質面は必ず触れる。JSONのみ返す。コードブロック不要。`;
     const user = `現場日報を作成してください。\n作業日：${form.date} / 現場名：${form.site} / 担当者：${form.worker}\n天気：${form.weather} / 作業種別：${form.workType}\n作業内容：${form.progress||'未記載'}\n問題・特記：${form.issues||'なし'}\n翌日予定：${form.next||'未定'}\n{"summary":"2〜3文","work_detail":"箇条書き3〜5項目","safety":"箇条書き2〜3項目","issues":"問題点と対策","next_plan":"箇条書き2〜3項目","comment":"担当者所見2〜3文"}`;
     try {
-      const text = await callClaude(apiKey, system, user);
+      const text = await callClaude(system, user);
       let d = {};
       try { d = JSON.parse(text.trim()); } catch { const m = text.match(/\{[\s\S]*\}/); if (m) try { d = JSON.parse(m[0]); } catch {} }
       setResult({ ...form, photos: [...photos], ...d });
@@ -635,7 +503,7 @@ function GenbaReport({ apiKey }) {
 // ═══════════════════════════════════════════════════════════
 // 見積もり AI
 // ═══════════════════════════════════════════════════════════
-function Mitsumori({ apiKey }) {
+function Mitsumori() {
   const [info, setInfo] = useState({ client: '', myName: '', project: '', note: '' });
   const [items, setItems] = useState([newItem(), newItem(), newItem()]);
   const [result, setResult] = useState(null);
@@ -657,7 +525,7 @@ function Mitsumori({ apiKey }) {
     const system = `建設・設備工事業界のプロ見積書作成専門家。案件概要と備考を作成。JSONのみ返す。コードブロック不要。`;
     const user = `見積書の案件概要と備考を作成してください。\n御見積先：${info.client} / 案件名：${info.project}\n税込合計：¥${fmt(total)}\nメモ：${info.note||'なし'}\n明細：${validItems.map(i=>`${i.name}：${i.qty}${i.unit}×¥${fmt(Number(i.unitPrice))}`).join(', ')}\n{"summary":"案件概要2〜3文","remarks":"備考・補足事項5〜6項目（箇条書き）"}`;
     try {
-      const text = await callClaude(apiKey, system, user);
+      const text = await callClaude(system, user);
       let d = {};
       try { d = JSON.parse(text.trim()); } catch { const m = text.match(/\{[\s\S]*\}/); if (m) try { d = JSON.parse(m[0]); } catch {} }
       setResult({ ...info, items: validItems, subtotal, tax, total, date: new Date().toLocaleDateString('ja-JP'), ...d });
@@ -787,7 +655,7 @@ function Mitsumori({ apiKey }) {
 // ═══════════════════════════════════════════════════════════
 // 議事録 AI
 // ═══════════════════════════════════════════════════════════
-function Gijiroku({ apiKey }) {
+function Gijiroku() {
   const [info, setInfo] = useState({ title: '', date: new Date().toISOString().split('T')[0], location: '' });
   const [participants, setParticipants] = useState([]);
   const [pInput, setPInput] = useState('');
@@ -814,7 +682,7 @@ function Gijiroku({ apiKey }) {
     const system = `会議ファシリテーションと議事録作成の専門家。乱雑なメモから構造化された議事録を作成する。JSONのみ返す。コードブロック不要。`;
     const user = `議事録を作成してください。\n会議名：${info.title} / 日時：${info.date} / 場所：${info.location||'未記載'} / 参加者：${participants.join('、')||'未記載'}\n内容：${rawText}\n{"summary":"概要2〜3文","agenda":"議題・討議（箇条書き3〜6項目）","decisions":"決定事項（箇条書き2〜5項目）","actions":[{"task":"タスク","owner":"担当者","deadline":"期限"}],"next_meeting":"次回会議（なければ空文字）"}`;
     try {
-      const text = await callClaude(apiKey, system, user);
+      const text = await callClaude(system, user);
       let d = {};
       try { d = JSON.parse(text.trim()); } catch { const m = text.match(/\{[\s\S]*\}/); if (m) try { d = JSON.parse(m[0]); } catch {} }
       setResult({ ...info, participants: [...participants], ...d });
@@ -1000,10 +868,7 @@ const NAVS = [
 const TITLES = { home:'AI WORKS', report:'現場報告AI', quote:'見積もりAI', minutes:'議事録AI' };
 
 export default function App() {
-  const [apiKey, setApiKey] = useState(getKey);
   const [page, setPage] = useState('home');
-
-  if (!apiKey) return <SetupScreen onSuccess={setApiKey} />;
 
   return (
     <div className="shell">
@@ -1027,15 +892,14 @@ export default function App() {
         <div className="topbar">
           <div className="topbar-title">{TITLES[page]}</div>
           <div className="topbar-right">
-            <button className="key-btn" onClick={()=>{sessionStorage.removeItem(KEY_STORAGE);setApiKey('');}}>🔑 キー変更</button>
             <div className="topbar-badge">AI POWERED</div>
           </div>
         </div>
         <div className="scroll">
           {page==='home'    && <Home onNav={setPage}/>}
-          {page==='report'  && <GenbaReport apiKey={apiKey}/>}
-          {page==='quote'   && <Mitsumori apiKey={apiKey}/>}
-          {page==='minutes' && <Gijiroku apiKey={apiKey}/>}
+          {page==='report'  && <GenbaReport/>}
+          {page==='quote'   && <Mitsumori/>}
+          {page==='minutes' && <Gijiroku/>}
         </div>
       </div>
     </div>

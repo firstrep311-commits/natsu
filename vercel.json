@@ -1,5 +1,15 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/AI_WORKS_v2_easy_1.html" }
+    { "source": "/api/claude", "destination": "/api/claude" },
+
+    { "source": "/(.*)", "has": [{"type": "host", "value": "margin.yourservice.com"}], "destination": "/AI_WORKS_v2_1.html" },
+    { "source": "/(.*)", "has": [{"type": "host", "value": "genba.yourservice.com"}],  "destination": "/kensetsuai_demo_v2.html" },
+    { "source": "/(.*)", "has": [{"type": "host", "value": "eigyo.yourservice.com"}],  "destination": "/AI_WORKS_v2_easy_1.html" },
+
+    { "source": "/margin", "destination": "/AI_WORKS_v2_1.html" },
+    { "source": "/genba",  "destination": "/kensetsuai_demo_v2.html" },
+    { "source": "/eigyo",  "destination": "/AI_WORKS_v2_easy_1.html" },
+
+    { "source": "/",       "destination": "/AI_WORKS_v2_easy_1.html" }
   ]
 }
