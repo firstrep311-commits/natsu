@@ -194,95 +194,26 @@ const fmt = n => Number(n).toLocaleString('ja-JP');
 let uid = 0;
 const newItem = () => ({ id: ++uid, name: '', qty: 1, unit: '式', unitPrice: 0 });
 
-// ── API KEY管理 ──────────────────────────────────────────────
-const KEY_STORAGE = 'aiworks_api_key';
-const getKey = () => sessionStorage.getItem(KEY_STORAGE) || '';
-const saveKey = k => sessionStorage.setItem(KEY_STORAGE, k);
-
-async function callClaude(apiKey, systemPrompt, userPrompt) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true"
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1500,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }]
-    })
+async function callClaude(system, user) {
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system, user })
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `HTTP ${res.status}`);
+    const msg = err.error || '';
+    if (res.status === 429) throw new Error('利用制限に達しました。しばらく待ってから再試行してください。');
+    throw new Error(msg || `通信エラー（${res.status}）が発生しました。`);
   }
   const data = await res.json();
-  return data.content?.find(b => b.type === 'text')?.text || '';
-}
-
-// ── APIキー設定画面 ──────────────────────────────────────────
-function SetupScreen({ onSuccess }) {
-  const [key, setKey] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState('');
-
-  const handleSubmit = async () => {
-    const k = key.trim();
-    if (!k.startsWith('sk-ant-')) {
-      setErr('APIキーは「sk-ant-」で始まる文字列です。確認してください。');
-      return;
-    }
-    setLoading(true); setErr('');
-    try {
-      await callClaude(k, 'あなたはテストです。', 'テスト');
-      saveKey(k);
-      onSuccess(k);
-    } catch(e) {
-      setErr(`接続に失敗しました: ${e.message}`);
-    }
-    setLoading(false);
-  };
-
-  return (
-    <div className="setup-overlay">
-      <div className="setup-box">
-        <div className="setup-logo">AI WORKS</div>
-        <div className="setup-sub">中小企業向け AIパック</div>
-        <div className="setup-title">🔑 APIキーを入力してください</div>
-        <div className="setup-desc">
-          このツールを使うにはAnthropicのAPIキーが必要です。<br/>
-          入力したキーはこのブラウザのセッション中のみ保持され、外部に送信されることはありません。
-        </div>
-        <div className="setup-label">APIキー</div>
-        <input
-          className="setup-input"
-          type="password"
-          placeholder="sk-ant-api03-..."
-          value={key}
-          onChange={e => setKey(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-          autoComplete="off"
-        />
-        <div className="setup-hint">
-          ※ APIキーは <a href="https://console.anthropic.com/account/keys" target="_blank">console.anthropic.com</a> で無料取得できます。<br/>
-          ※ ブラウザを閉じると自動的にリセットされます（セキュリティのため）。
-        </div>
-        {err && <div className="setup-err">⚠️ {err}</div>}
-        <button className="setup-btn" onClick={handleSubmit} disabled={loading || !key.trim()}>
-          {loading ? '⚙️ 接続確認中...' : '接続して始める →'}
-        </button>
-      </div>
-    </div>
-  );
+  return data.text || '';
 }
 
 // ═══════════════════════════════════════════════════════════
 // 現場報告 AI
 // ═══════════════════════════════════════════════════════════
-function GenbaReport({ apiKey }) {
+function GenbaReport() {
   const [form, setForm] = useState({
     date: new Date().toISOString().split('T')[0],
     site: '', worker: '', weather: '晴れ', workType: '',
@@ -342,7 +273,7 @@ ${form.next || '未定'}
 }`;
 
     try {
-      const text = await callClaude(apiKey, system, user);
+      const text = await callClaude(system, user);
       let d = {};
       try { d = JSON.parse(text.trim()); } catch {
         const m = text.match(/\{[\s\S]*\}/);
@@ -501,7 +432,7 @@ ${form.next || '未定'}
 // ═══════════════════════════════════════════════════════════
 // 見積もり AI
 // ═══════════════════════════════════════════════════════════
-function Mitsumori({ apiKey }) {
+function Mitsumori() {
   const [info, setInfo] = useState({ client: '', myName: '', project: '', note: '' });
   const [items, setItems] = useState([newItem(), newItem(), newItem()]);
   const [result, setResult] = useState(null);
@@ -543,7 +474,7 @@ ${validItems.map(i => `・${i.name}：${i.qty}${i.unit} × ¥${fmt(Number(i.unit
 }`;
 
     try {
-      const text = await callClaude(apiKey, system, user);
+      const text = await callClaude(system, user);
       let d = {};
       try { d = JSON.parse(text.trim()); } catch {
         const m = text.match(/\{[\s\S]*\}/);
@@ -693,7 +624,7 @@ ${validItems.map(i => `・${i.name}：${i.qty}${i.unit} × ¥${fmt(Number(i.unit
 // ═══════════════════════════════════════════════════════════
 // 議事録 AI
 // ═══════════════════════════════════════════════════════════
-function Gijiroku({ apiKey }) {
+function Gijiroku() {
   const [info, setInfo] = useState({ title: '', date: new Date().toISOString().split('T')[0], location: '' });
   const [participants, setParticipants] = useState([]);
   const [pInput, setPInput] = useState('');
@@ -747,7 +678,7 @@ ${rawText}
 }`;
 
     try {
-      const text = await callClaude(apiKey, system, user);
+      const text = await callClaude(system, user);
       let d = {};
       try { d = JSON.parse(text.trim()); } catch {
         const m = text.match(/\{[\s\S]*\}/);
@@ -947,12 +878,7 @@ const NAVS = [
 const TITLES = { home:'AI WORKS', report:'現場報告AI', quote:'見積もりAI', minutes:'議事録AI' };
 
 export default function App() {
-  const [apiKey, setApiKey] = useState(getKey);
   const [page, setPage] = useState('home');
-
-  if (!apiKey) {
-    return <SetupScreen onSuccess={setApiKey} />;
-  }
 
   return (
     <div className="shell">
@@ -979,15 +905,14 @@ export default function App() {
         <div className="topbar">
           <div className="topbar-title">{TITLES[page]}</div>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
-            <button className="key-btn" onClick={() => { sessionStorage.removeItem('aiworks_api_key'); setApiKey(''); }}>🔑 キー変更</button>
             <div className="topbar-badge">AI POWERED</div>
           </div>
         </div>
         <div className="scroll">
           {page==='home'    && <Home onNav={setPage} />}
-          {page==='report'  && <GenbaReport apiKey={apiKey} />}
-          {page==='quote'   && <Mitsumori apiKey={apiKey} />}
-          {page==='minutes' && <Gijiroku apiKey={apiKey} />}
+          {page==='report'  && <GenbaReport />}
+          {page==='quote'   && <Mitsumori />}
+          {page==='minutes' && <Gijiroku />}
         </div>
       </div>
     </div>
